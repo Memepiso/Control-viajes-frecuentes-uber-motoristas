@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoTaxi Pro - Gestión de Viajes y Finanzas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Top Navbar -->
+    <header class="bg-gray-900 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-500 text-white p-2 rounded-xl shadow-inner flex items-center justify-center">
+                    <i class="fa-solid fa-motorcycle text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight">MotoTaxi Pro</h1>
+                    <p class="text-xs text-gray-400">Control de Viajes y Finanzas</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="openDataModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium transition border border-gray-700 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-database text-brand-500"></i>
+                    <span>Datos / Respaldo</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8">
+            <button onclick="switchTab('calendar')" id="nav-calendar" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-brand-500 text-brand-600 transition">
+                <i class="fa-solid fa-calendar-days text-base"></i>
+                <span>Calendario & Viajes</span>
+            </button>
+            <button onclick="switchTab('passengers')" id="nav-passengers" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
+                <i class="fa-solid fa-users text-base"></i>
+                <span>Pasajeros (CRUD)</span>
+            </button>
+            <button onclick="switchTab('finances')" id="nav-finances" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
+                <i class="fa-solid fa-wallet text-base"></i>
+                <span>Resumen Quincenal</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- TAB 1: CALENDAR & TRIPS -->
+        <section id="tab-calendar" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <button onclick="changeMonth(-1)" class="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <h2 id="calendar-month-year" class="text-xl font-bold text-gray-900 w-48 text-center capitalize">Cargando...</h2>
+                    <button onclick="changeMonth(1)" class="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button onclick="goToCurrentMonth()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium transition">
+                        Hoy
+                    </button>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="openTripModal()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow transition flex items-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Nuevo Viaje</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calendar Grid Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <!-- Day Headers -->
+                <div class="grid grid-cols-7 bg-gray-100 text-center font-semibold text-xs text-gray-600 py-3 border-b border-gray-200 uppercase tracking-wider">
+                    <div>Lunes</div>
+                    <div>Martes</div>
+                    <div>Miércoles</div>
+                    <div>Jueves</div>
+                    <div>Viernes</div>
+                    <div>Sábado</div>
+                    <div>Domingo</div>
+                </div>
+                <!-- Days Grid -->
+                <div id="calendar-grid" class="grid grid-cols-7 auto-rows-fr bg-gray-200 gap-px">
+                    <!-- Dynamic Days populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: PASSENGERS CRUD -->
+        <section id="tab-passengers" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="relative flex-1 max-w-md">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-search"></i>
+                    </span>
+                    <input type="text" id="passenger-search" oninput="renderPassengers()" placeholder="Buscar pasajero por nombre, teléfono o ruta..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                </div>
+                <button onclick="openPassengerModal()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Nuevo Pasajero</span>
+                </button>
+            </div>
+
+            <!-- Passengers List -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="passengers-container">
+                <!-- Dynamic Passenger Cards -->
+            </div>
+        </section>
+
+        <!-- TAB 3: FINANCES & FORTNIGHT REPORT -->
+        <section id="tab-finances" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+                <!-- Controls -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-gray-100">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Mes</label>
+                            <select id="finance-month" onchange="renderFinances()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Quincena</label>
+                            <select id="finance-fortnight" onchange="renderFinances()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="1">1ª Quincena (Días 1 al 15)</option>
+                                <option value="2">2ª Quincena (Días 16 al Fin de Mes)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="printReport()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center space-x-2">
+                            <i class="fa-solid fa-print"></i>
+                            <span>Imprimir / PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-brand-50 p-4 rounded-xl border border-brand-100">
+                        <p class="text-xs font-semibold text-brand-700 uppercase">Ingreso Total</p>
+                        <h3 id="kpi-total-income" class="text-2xl font-bold text-brand-900 mt-1">$0.00</h3>
+                        <p class="text-xs text-brand-600 mt-1"><span id="kpi-completed-trips">0</span> viajes completados</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-xs font-semibold text-blue-700 uppercase">Tarifas Base</p>
+                        <h3 id="kpi-base-income" class="text-2xl font-bold text-blue-900 mt-1">$0.00</h3>
+                        <p class="text-xs text-blue-600 mt-1">Sin cobros extra</p>
+                    </div>
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                        <p class="text-xs font-semibold text-amber-700 uppercase">Cobros Extra / Ajustes</p>
+                        <h3 id="kpi-extra-income" class="text-2xl font-bold text-amber-900 mt-1">$0.00</h3>
+                        <p class="text-xs text-amber-600 mt-1">Paradas extra / cambios</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                        <p class="text-xs font-semibold text-purple-700 uppercase">Promedio por Viaje</p>
+                        <h3 id="kpi-avg-income" class="text-2xl font-bold text-purple-900 mt-1">$0.00</h3>
+                        <p class="text-xs text-purple-600 mt-1">Tarifa efectiva</p>
+                    </div>
+                </div>
+
+                <!-- Detailed Table -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-gray-900 text-sm">Detalle de Viajes en la Quincena</h4>
+                    <div class="overflow-x-auto border border-gray-200 rounded-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider font-semibold border-b border-gray-200">
+                                    <th class="p-3">Fecha</th>
+                                    <th class="p-3">Pasajero</th>
+                                    <th class="p-3">Ruta</th>
+                                    <th class="p-3 text-right">Tarifa Base</th>
+                                    <th class="p-3 text-right">Extras</th>
+                                    <th class="p-3 text-right">Total</th>
+                                    <th class="p-3 text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="finance-table-body" class="divide-y divide-gray-200 text-sm">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: TRIP (Add / Edit) -->
+    <div id="trip-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6 animate-scale">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 id="trip-modal-title" class="text-lg font-bold text-gray-900">Programar Nuevo Viaje</h3>
+                <button onclick="closeTripModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="trip-form" onsubmit="saveTrip(event)" class="space-y-4">
+                <input type="hidden" id="trip-id">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Fecha</label>
+                    <input type="date" id="trip-date" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Pasajero</label>
+                    <select id="trip-passenger" onchange="onPassengerSelectChange()" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <!-- Populated -->
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Origen</label>
+                        <input type="text" id="trip-origin" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Destino</label>
+                        <input type="text" id="trip-destination" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tarifa Base ($)</label>
+                        <input type="number" step="0.01" id="trip-rate" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Turno / Horario</label>
+                        <select id="trip-shift" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="Mañana">Mañana (Ida)</option>
+                            <option value="Tarde">Tarde (Regreso)</option>
+                            <option value="Especial">Especial / Único</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Notas / Observaciones</label>
+                    <textarea id="trip-notes" rows="2" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Parada en la farmacia..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="closeTripModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow transition">Guardar Viaje</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADJUSTMENT (Extra stops, changes) -->
+    <div id="adjustment-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 animate-scale">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 class="text-lg font-bold text-gray-900">Ajuste Diario / Paradas Extra</h3>
+                <button onclick="closeAdjustmentModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="adjustment-form" onsubmit="saveAdjustment(event)" class="space-y-4">
+                <input type="hidden" id="adj-trip-id">
+                <div>
+                    <p id="adj-trip-info" class="text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-200 font-medium">Información del viaje...</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Monto Extra / Cobro Adicional ($)</label>
+                    <input type="number" step="0.01" id="adj-amount" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 20.00">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Motivo del Ajuste</label>
+                    <textarea id="adj-reason" rows="2" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Parada extra en el mercado, espera de 15 min..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="closeAdjustmentModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow transition">Aplicar Ajuste</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: PASSENGER CRUD -->
+    <div id="passenger-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 animate-scale">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 id="passenger-modal-title" class="text-lg font-bold text-gray-900">Nuevo Pasajero</h3>
+                <button onclick="closePassengerModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="passenger-form" onsubmit="savePassenger(event)" class="space-y-4">
+                <input type="hidden" id="pass-id">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nombre Completo</label>
+                    <input type="text" id="pass-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. María Pérez">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Teléfono / WhatsApp</label>
+                    <input type="text" id="pass-phone" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 555-1234-5678">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Origen Frecuente</label>
+                        <input type="text" id="pass-origin" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Casa">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Destino Frecuente</label>
+                        <input type="text" id="pass-destination" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Trabajo">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tarifa Predeterminada ($)</label>
+                    <input type="number" step="0.01" id="pass-rate" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 50.00">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Notas / Observaciones</label>
+                    <textarea id="pass-notes" rows="2" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Recoger puntual a las 7:00 AM..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="closePassengerModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow transition">Guardar Pasajero</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: DATA BACKUP / RESTORE -->
+    <div id="data-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 animate-scale">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 class="text-lg font-bold text-gray-900">Respaldo y Datos</h3>
+                <button onclick="closeDataModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-xs text-gray-600">Exporta una copia de seguridad de tus pasajeros y viajes en formato JSON, o restaura tus datos desde un archivo anterior.</p>
+                <div class="flex space-x-3">
+                    <button onclick="exportData()" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-xl text-sm font-semibold shadow transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Exportar JSON</span>
+                    </button>
+                    <label class="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl text-sm font-semibold shadow transition flex items-center justify-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Importar JSON</span>
+                        <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+                    </label>
+                </div>
+                <div class="pt-4 border-t border-gray-100">
+                    <button onclick="resetDemoData()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl text-sm font-semibold transition border border-red-200">
+                        Restaurar Datos de Ejemplo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl text-sm font-medium flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-brand-500"></i>
+        <span id="toast-msg">Operación exitosa</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- State Management & LocalStorage ---
+        const STORAGE_KEYS = {
+            PASSENGERS: 'mototaxi_passengers',
+            TRIPS: 'mototaxi_trips'
+        };
+
+        let state = {
+            passengers: [],
+            trips: [],
+            currentDate: new Date(), // Used for Calendar view
+            activeTab: 'calendar'
+        };
+
+        // Default Seed Data
+        const seedData = {
+            passengers: [
+                { id: 'p1', name: 'Carlos Mendoza', phone: '555-0192', origin: 'Col. Las Flores', destination: 'Centro Financiero', rate: 60.00, notes: 'Viaje matutino diario' },
+                { id: 'p2', name: 'Sofía Rivas', phone: '555-8832', origin: 'Residencial Los Pinos', destination: 'Universidad Central', rate: 75.00, notes: 'Pago semanal puntual' },
+                { id: 'p3', name: 'Roberto Gómez', phone: '555-4419', origin: 'Mercado Municipal', destination: 'Col. San José', rate: 50.00, notes: 'A veces lleva carga ligera' }
+            ],
+            trips: []
+        };
+
+        function initApp() {
+            loadFromStorage();
+            // If trips is empty, seed a few trips for the current month
+            if (state.trips.length === 0) {
+                generateSampleTrips();
+            }
+            setupFinanceMonthSelect();
+            renderCurrentTab();
+        }
+
+        function loadFromStorage() {
+            const savedPassengers = localStorage.getItem(STORAGE_KEYS.PASSENGERS);
+            const savedTrips = localStorage.getItem(STORAGE_KEYS.TRIPS);
+
+            state.passengers = savedPassengers ? JSON.parse(savedPassengers) : seedData.passengers;
+            state.trips = savedTrips ? JSON.parse(savedTrips) : [];
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEYS.PASSENGERS, JSON.stringify(state.passengers));
+            localStorage.setItem(STORAGE_KEYS.TRIPS, JSON.stringify(state.trips));
+        }
+
+        function generateSampleTrips() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            
+            // Add a few trips in current month
+            const sampleDates = [3, 5, 8, 10, 12, 15, 18, 20];
+            sampleDates.forEach((day, index) => {
+                const passenger = state.passengers[index % state.passengers.length];
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                state.trips.push({
+                    id: 'trip_' + Math.random().toString(36).substr(2, 9),
+                    date: dateStr,
+                    passengerId: passenger.id,
+                    origin: passenger.origin,
+                    destination: passenger.destination,
+                    rate: passenger.rate,
+                    extraCharges: index % 3 === 0 ? 15.00 : 0.00,
+                    extraReason: index % 3 === 0 ? 'Parada extra en farmacia' : '',
+                    shift: index % 2 === 0 ? 'Mañana' : 'Tarde',
+                    notes: passenger.notes,
+                    status: day < now.getDate() ? 'Completado' : 'Pendiente'
+                });
+            });
+            saveToStorage();
+        }
+
+        // --- Navigation ---
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            ['calendar', 'passengers', 'finances'].forEach(t => {
+                const sec = document.getElementById(`tab-${t}`);
+                const nav = document.getElementById(`nav-${t}`);
+                if (t === tabId) {
+                    sec.classList.remove('hidden');
+                    nav.className = "py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-brand-500 text-brand-600 transition";
+                } else {
+                    sec.classList.add('hidden');
+                    nav.className = "py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition";
+                }
+            });
+            renderCurrentTab();
+        }
+
+        function renderCurrentTab() {
+            if (state.activeTab === 'calendar') renderCalendar();
+            else if (state.activeTab === 'passengers') renderPassengers();
+            else if (state.activeTab === 'finances') renderFinances();
+        }
+
+        // --- Calendar & Trips Module ---
+        function changeMonth(direction) {
+            state.currentDate.setMonth(state.currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function goToCurrentMonth() {
+            state.currentDate = new Date();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = state.currentDate.getFullYear();
+            const month = state.currentDate.getMonth();
+
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+
+            const gridEl = document.getElementById('calendar-grid');
+            gridEl.innerHTML = '';
+
+            // First day of month
+            const firstDay = new Date(year, month, 1);
+            let startingDay = firstDay.getDay() - 1; // Monday start
+            if (startingDay === -1) startingDay = 6; // Sunday
+
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            // Padding from previous month
+            for (let i = startingDay - 1; i >= 0; i--) {
+                const dayNum = prevMonthDays - i;
+                const cell = createDayCell(dayNum, true, null);
+                gridEl.appendChild(cell);
+            }
+
+            // Current month days
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const cell = createDayCell(day, false, dateStr);
+                gridEl.appendChild(cell);
+            }
+
+            // Padding for next month to complete grid rows
+            const totalCells = gridEl.children.length;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 1; i <= remainingCells; i++) {
+                const cell = createDayCell(i, true, null);
+                gridEl.appendChild(cell);
+            }
+        }
+
+        function createDayCell(dayNum, isOtherMonth, dateStr) {
+            const cell = document.createElement('div');
+            cell.className = `bg-white min-h-[120px] p-2 flex flex-col justify-between transition ${isOtherMonth ? 'bg-gray-50/60 text-gray-400' : 'text-gray-800 hover:bg-gray-50/50'}`;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = "flex items-center justify-between mb-1";
+            
+            const daySpan = document.createElement('span');
+            daySpan.className = `text-xs font-bold px-1.5 py-0.5 rounded ${isOtherMonth ? 'text-gray-400' : 'bg-gray-100 text-gray-700'}`;
+            daySpan.innerText = dayNum;
+            headerDiv.appendChild(daySpan);
+
+            if (!isOtherMonth && dateStr) {
+                const addBtn = document.createElement('button');
+                addBtn.className = "text-gray-400 hover:text-brand-600 p-1 text-xs transition";
+                addBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+                addBtn.onclick = () => openTripModal(dateStr);
+                headerDiv.appendChild(addBtn);
+            }
+            cell.appendChild(headerDiv);
+
+            // Trips container for this day
+            const tripsList = document.createElement('div');
+            tripsList.className = "space-y-1.5 overflow-y-auto max-h-[100px] text-xs";
+
+            if (!isOtherMonth && dateStr) {
+                const dayTrips = state.trips.filter(t => t.date === dateStr);
+                dayTrips.forEach(trip => {
+                    const passenger = state.passengers.find(p => p.id === trip.passengerId) || { name: 'Pasajero Desconocido' };
+                    const tripCard = document.createElement('div');
+                    
+                    let statusBg = 'bg-amber-50 border-amber-200 text-amber-800';
+                    if (trip.status === 'Completado') statusBg = 'bg-brand-50 border-brand-200 text-brand-800';
+                    if (trip.status === 'Cancelado') statusBg = 'bg-red-50 border-red-200 text-red-800 line-through';
+
+                    tripCard.className = `p-1.5 rounded-lg border ${statusBg} shadow-xs flex flex-col space-y-1 group relative`;
+                    
+                    const totalAmount = Number(trip.rate) + Number(trip.extraCharges || 0);
+
+                    tripCard.innerHTML = `
+                        <div class="flex items-center justify-between font-semibold">
+                            <span class="truncate pr-1">${passenger.name.split(' ')[0]}</span>
+                            <span class="text-[10px] font-bold">$${totalAmount.toFixed(2)}</span>
+                        </div>
+                        <div class="text-[10px] text-gray-500 truncate">${trip.origin} ➔ ${trip.destination}</div>
+                        <div class="flex items-center justify-between pt-1 border-t border-gray-200/40 text-[10px]">
+                            <span class="font-medium">${trip.shift}</span>
+                            <div class="flex items-center space-x-1.5">
+                                <button onclick="openAdjustmentModal('${trip.id}')" title="Ajuste / Extra" class="text-amber-600 hover:text-amber-800"><i class="fa-solid fa-coins"></i></button>
+                                <button onclick="toggleTripStatus('${trip.id}')" title="Cambiar Estado" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-check"></i></button>
+                                <button onclick="editTrip('${trip.id}')" title="Editar" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteTrip('${trip.id}')" title="Eliminar" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    tripsList.appendChild(tripCard);
+                });
+            }
+
+            cell.appendChild(tripsList);
+            return cell;
+        }
+
+        // --- Trip CRUD & Actions ---
+        function openTripModal(dateStr = null) {
+            document.getElementById('trip-form').reset();
+            document.getElementById('trip-id').value = '';
+            document.getElementById('trip-modal-title').innerText = 'Programar Nuevo Viaje';
+
+            // Populate passenger dropdown
+            const select = document.getElementById('trip-passenger');
+            select.innerHTML = '<option value="">Seleccione un pasajero...</option>';
+            state.passengers.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name} (${p.origin} ➔ ${p.destination})</option>`;
+            });
+
+            if (dateStr) {
+                document.getElementById('trip-date').value = dateStr;
+            } else {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('trip-date').value = today;
+            }
+
+            document.getElementById('trip-modal').classList.remove('hidden');
+        }
+
+        function closeTripModal() {
+            document.getElementById('trip-modal').classList.add('hidden');
+        }
+
+        function onPassengerSelectChange() {
+            const passId = document.getElementById('trip-passenger').value;
+            const passenger = state.passengers.find(p => p.id === passId);
+            if (passenger) {
+                document.getElementById('trip-origin').value = passenger.origin || '';
+                document.getElementById('trip-destination').value = passenger.destination || '';
+                document.getElementById('trip-rate').value = passenger.rate || '';
+                document.getElementById('trip-notes').value = passenger.notes || '';
+            }
+        }
+
+        function saveTrip(event) {
+            event.preventDefault();
+            const id = document.getElementById('trip-id').value;
+            const date = document.getElementById('trip-date').value;
+            const passengerId = document.getElementById('trip-passenger').value;
+            const origin = document.getElementById('trip-origin').value;
+            const destination = document.getElementById('trip-destination').value;
+            const rate = parseFloat(document.getElementById('trip-rate').value);
+            const shift = document.getElementById('trip-shift').value;
+            const notes = document.getElementById('trip-notes').value;
+
+            if (id) {
+                // Edit
+                const trip = state.trips.find(t => t.id === id);
+                if (trip) {
+                    trip.date = date;
+                    trip.passengerId = passengerId;
+                    trip.origin = origin;
+                    trip.destination = destination;
+                    trip.rate = rate;
+                    trip.shift = shift;
+                    trip.notes = notes;
+                }
+                showToast('Viaje actualizado correctamente');
+            } else {
+                // Create
+                const newTrip = {
+                    id: 'trip_' + Math.random().toString(36).substr(2, 9),
+                    date,
+                    passengerId,
+                    origin,
+                    destination,
+                    rate,
+                    extraCharges: 0.00,
+                    extraReason: '',
+                    shift,
+                    notes,
+                    status: 'Pendiente'
+                };
+                state.trips.push(newTrip);
+                showToast('Viaje programado con éxito');
+            }
+
+            saveToStorage();
+            closeTripModal();
+            renderCurrentTab();
+        }
+
+        function editTrip(id) {
+            const trip = state.trips.find(t => t.id === id);
+            if (!trip) return;
+
+            openTripModal();
+            document.getElementById('trip-modal-title').innerText = 'Editar Viaje';
+            document.getElementById('trip-id').value = trip.id;
+            document.getElementById('trip-date').value = trip.date;
+            
+            const select = document.getElementById('trip-passenger');
+            select.value = trip.passengerId;
+
+            document.getElementById('trip-origin').value = trip.origin;
+            document.getElementById('trip-destination').value = trip.destination;
+            document.getElementById('trip-rate').value = trip.rate;
+            document.getElementById('trip-shift').value = trip.shift;
+            document.getElementById('trip-notes').value = trip.notes || '';
+        }
+
+        function deleteTrip(id) {
+            if (confirm('¿Está seguro de eliminar este viaje?')) {
+                state.trips = state.trips.filter(t => t.id !== id);
+                saveToStorage();
+                renderCurrentTab();
+                showToast('Viaje eliminado');
+            }
+        }
+
+        function toggleTripStatus(id) {
+            const trip = state.trips.find(t => t.id === id);
+            if (trip) {
+                if (trip.status === 'Pendiente') trip.status = 'Completado';
+                else if (trip.status === 'Completado') trip.status = 'Cancelado';
+                else trip.status = 'Pendiente';
+
+                saveToStorage();
+                renderCurrentTab();
+                showToast(`Estado cambiado a: ${trip.status}`);
+            }
+        }
+
+        // --- Adjustment Modal ---
+        function openAdjustmentModal(tripId) {
+            const trip = state.trips.find(t => t.id === tripId);
+            if (!trip) return;
+
+            const passenger = state.passengers.find(p => p.id === trip.passengerId) || { name: 'Pasajero' };
+
+            document.getElementById('adj-trip-id').value = trip.id;
+            document.getElementById('adj-trip-info').innerText = `Pasajero: ${passenger.name}\nFecha: ${trip.date} (${trip.shift})\nRuta: ${trip.origin} ➔ ${trip.destination}\nTarifa Base: $${trip.rate}`;
+            document.getElementById('adj-amount').value = trip.extraCharges || '';
+            document.getElementById('adj-reason').value = trip.extraReason || '';
+
+            document.getElementById('adjustment-modal').classList.remove('hidden');
+        }
+
+        function closeAdjustmentModal() {
+            document.getElementById('adjustment-modal').classList.add('hidden');
+        }
+
+        function saveAdjustment(event) {
+            event.preventDefault();
+            const tripId = document.getElementById('adj-trip-id').value;
+            const amount = parseFloat(document.getElementById('adj-amount').value) || 0;
+            const reason = document.getElementById('adj-reason').value;
+
+            const trip = state.trips.find(t => t.id === tripId);
+            if (trip) {
+                trip.extraCharges = amount;
+                trip.extraReason = reason;
+                saveToStorage();
+                closeAdjustmentModal();
+                renderCurrentTab();
+                showToast('Ajuste aplicado correctamente');
+            }
+        }
+
+        // --- Passenger CRUD Module ---
+        function renderPassengers() {
+            const container = document.getElementById('passengers-container');
+            const search = document.getElementById('passenger-search').value.toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = state.passengers.filter(p => 
+                p.name.toLowerCase().includes(search) || 
+                (p.phone && p.phone.toLowerCase().includes(search)) ||
+                (p.origin && p.origin.toLowerCase().includes(search)) ||
+                (p.destination && p.destination.toLowerCase().includes(search))
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">No se encontraron pasajeros registrados.</div>`;
+                return;
+            }
+
+            filtered.forEach(passenger => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between space-y-4 hover:shadow-md transition";
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-base">${passenger.name}</h3>
+                                <p class="text-xs text-gray-500"><i class="fa-solid fa-phone mr-1"></i> ${passenger.phone || 'Sin teléfono'}</p>
+                            </div>
+                            <span class="bg-brand-50 text-brand-700 font-bold px-2.5 py-1 rounded-xl text-sm border border-brand-100">$${Number(passenger.rate).toFixed(2)}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs space-y-1">
+                            <p class="text-gray-600"><span class="font-semibold">Ruta:</span> ${passenger.origin || 'N/A'} ➔ ${passenger.destination || 'N/A'}</p>
+                            ${passenger.notes ? `<p class="text-gray-500 italic"><span class="font-semibold">Notas:</span> ${passenger.notes}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
+                        <button onclick="editPassenger('${passenger.id}')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Editar</span>
+                        </button>
+                        <button onclick="deletePassenger('${passenger.id}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                            <i class="fa-solid fa-trash"></i>
+                            <span>Eliminar</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openPassengerModal() {
+            document.getElementById('passenger-form').reset();
+            document.getElementById('pass-id').value = '';
+            document.getElementById('passenger-modal-title').innerText = 'Nuevo Pasajero';
+            document.getElementById('passenger-modal').classList.remove('hidden');
+        }
+
+        function closePassengerModal() {
+            document.getElementById('passenger-modal').classList.add('hidden');
+        }
+
+        function savePassenger(event) {
+            event.preventDefault();
+            const id = document.getElementById('pass-id').value;
+            const name = document.getElementById('pass-name').value;
+            const phone = document.getElementById('pass-phone').value;
+            const origin = document.getElementById('pass-origin').value;
+            const destination = document.getElementById('pass-destination').value;
+            const rate = parseFloat(document.getElementById('pass-rate').value);
+            const notes = document.getElementById('pass-notes').value;
+
+            if (id) {
+                const p = state.passengers.find(item => item.id === id);
+                if (p) {
+                    p.name = name;
+                    p.phone = phone;
+                    p.origin = origin;
+                    p.destination = destination;
+                    p.rate = rate;
+                    p.notes = notes;
+                }
+                showToast('Pasajero actualizado');
+            } else {
+                const newPassenger = {
+                    id: 'pass_' + Math.random().toString(36).substr(2, 9),
+                    name,
+                    phone,
+                    origin,
+                    destination,
+                    rate,
+                    notes
+                };
+                state.passengers.push(newPassenger);
+                showToast('Pasajero registrado con éxito');
+            }
+
+            saveToStorage();
+            closePassengerModal();
+            renderCurrentTab();
+        }
+
+        function editPassenger(id) {
+            const p = state.passengers.find(item => item.id === id);
+            if (!p) return;
+
+            openPassengerModal();
+            document.getElementById('passenger-modal-title').innerText = 'Editar Pasajero';
+            document.getElementById('pass-id').value = p.id;
+            document.getElementById('pass-name').value = p.name;
+            document.getElementById('pass-phone').value = p.phone || '';
+            document.getElementById('pass-origin').value = p.origin || '';
+            document.getElementById('pass-destination').value = p.destination || '';
+            document.getElementById('pass-rate').value = p.rate;
+            document.getElementById('pass-notes').value = p.notes || '';
+        }
+
+        function deletePassenger(id) {
+            if (confirm('¿Está seguro de eliminar este pasajero? Sus viajes programados se mantendrán pero perderán la referencia.')) {
+                state.passengers = state.passengers.filter(item => item.id !== id);
+                saveToStorage();
+                renderCurrentTab();
+                showToast('Pasajero eliminado');
+            }
+        }
+
+        // --- Finances & Fortnight Report Module ---
+        function setupFinanceMonthSelect() {
+            const select = document.getElementById('finance-month');
+            select.innerHTML = '';
+            const now = new Date();
+            const year = now.getFullYear();
+
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            
+            for (let m = 0; m < 12; m++) {
+                const val = `${year}-${String(m + 1).padStart(2, '0')}`;
+                const selected = m === now.getMonth() ? 'selected' : '';
+                select.innerHTML += `<option value="${val}" ${selected}>${monthNames[m]} ${year}</option>`;
+            }
+        }
+
+        function renderFinances() {
+            const monthVal = document.getElementById('finance-month').value; // YYYY-MM
+            const fortnight = parseInt(document.getElementById('finance-fortnight').value); // 1 or 2
+
+            if (!monthVal) return;
+
+            const [yearStr, monthStr] = monthVal.split('-');
+            const year = parseInt(yearStr);
+            const month = parseInt(monthStr) - 1;
+
+            // Filter trips for this month and fortnight
+            const fortnightTrips = state.trips.filter(t => {
+                if (!t.date || t.status === 'Cancelado') return false;
+                const [tYear, tMonth, tDay] = t.date.split('-').map(Number);
+                if (tYear !== year || (tMonth - 1) !== month) return false;
+
+                if (fortnight === 1) {
+                    return tDay >= 1 && tDay <= 15;
+                } else {
+                    return tDay >= 16;
+                }
+            });
+
+            let totalIncome = 0;
+            let baseIncome = 0;
+            let extraIncome = 0;
+            let completedCount = 0;
+
+            const tbody = document.getElementById('finance-table-body');
+            tbody.innerHTML = '';
+
+            if (fortnightTrips.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No hay registros de viajes para esta quincena.</td></tr>`;
+            } else {
+                fortnightTrips.sort((a, b) => a.date.localeCompare(b.date));
+                fortnightTrips.forEach(trip => {
+                    const passenger = state.passengers.find(p => p.id === trip.passengerId) || { name: 'Pasajero Eliminado' };
+                    const base = Number(trip.rate || 0);
+                    const extra = Number(trip.extraCharges || 0);
+                    const total = base + extra;
+
+                    if (trip.status === 'Completado') {
+                        totalIncome += total;
+                        baseIncome += base;
+                        extraIncome += extra;
+                        completedCount++;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 font-medium text-gray-900">${trip.date}</td>
+                        <td class="p-3 font-medium text-gray-900">${passenger.name}</td>
+                        <td class="p-3 text-gray-600">${trip.origin} ➔ ${trip.destination}</td>
+                        <td class="p-3 text-right text-gray-700">$${base.toFixed(2)}</td>
+                        <td class="p-3 text-right text-amber-600 font-medium">$${extra.toFixed(2)} ${trip.extraReason ? `<i class="fa-solid fa-circle-info text-xs" title="${trip.extraReason}"></i>` : ''}</td>
+                        <td class="p-3 text-right font-bold text-gray-900">$${total.toFixed(2)}</td>
+                        <td class="p-3 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${trip.status === 'Completado' ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">${trip.status}</span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Update KPI cards
+            document.getElementById('kpi-total-income').innerText = `$${totalIncome.toFixed(2)}`;
+            document.getElementById('kpi-completed-trips').innerText = completedCount;
+            document.getElementById('kpi-base-income').innerText = `$${baseIncome.toFixed(2)}`;
+            document.getElementById('kpi-extra-income').innerText = `$${extraIncome.toFixed(2)}`;
+            
+            const avg = completedCount > 0 ? totalIncome / completedCount : 0;
+            document.getElementById('kpi-avg-income').innerText = `$${avg.toFixed(2)}`;
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        // --- Data Backup / Restore ---
+        function openDataModal() {
+            document.getElementById('data-modal').classList.remove('hidden');
+        }
+
+        function closeDataModal() {
+            document.getElementById('data-modal').classList.add('hidden');
+        }
+
+        function exportData() {
+            const backup = {
+                passengers: state.passengers,
+                trips: state.trips,
+                exportedAt: new Date().toISOString()
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `mototaxi_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('Datos exportados exitosamente');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.passengers && data.trips) {
+                        state.passengers = data.passengers;
+                        state.trips = data.trips;
+                        saveToStorage();
+                        renderCurrentTab();
+                        closeDataModal();
+                        showToast('Datos restaurados correctamente');
+                    } else {
+                        alert('El archivo JSON no tiene el formato válido.');
+                    }
+                } catch (err) {
+                    alert('Error al leer el archivo JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetDemoData() {
+            if (confirm('¿Restaurar datos de ejemplo? Se sobrescribirán los datos actuales.')) {
+                state.passengers = seedData.passengers;
+                state.trips = [];
+                generateSampleTrips();
+                saveToStorage();
+                renderCurrentTab();
+                closeDataModal();
+                showToast('Datos de ejemplo restaurados');
+            }
+        }
+
+        // --- Toast Utility ---
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Initialize on load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
