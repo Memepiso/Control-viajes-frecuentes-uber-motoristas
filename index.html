@@ -1,9 +1,15 @@
+<!--
+  HISTORIAL DE VERSIONES:
+  - v0.1.0 (2026-11-23): Versión inicial (Calendario interactivo, CRUD de pasajeros, resumen quincenal y respaldo JSON).
+  - v0.2.0 (2026-11-23): Adaptación a Honduras (Moneda Lempiras L, teléfonos de 8 dígitos, prefijo +504 en WhatsApp, estado de cuenta por cliente).
+  - v0.3.0 (2026-11-23): Nueva marca "⚡Delivery 𝗦.𝗢.𝗦̈⃝™", soporte de logo local "logo-delivery-sos.png" con icono de respaldo, simplificación de estados de viaje (Pendiente, Cobrado, Cancelado con migración automática de Completado), filtros de reportes avanzados (Quincenas, Mes completo, Rango personalizado y filtro "Solo pendientes por cobrar"), y formato de fechas con inicial del día de la semana (ej. 2026-11-02 (L)).
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MotoTaxi Pro - Gestión de Viajes y Finanzas (Honduras)</title>
+    <title>⚡Delivery 𝗦.𝗢.𝗦̈⃝™ - Gestión de Viajes y Cobros (Honduras)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -39,12 +45,15 @@
     <header class="bg-gray-900 text-white shadow-md sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-brand-500 text-white p-2 rounded-xl shadow-inner flex items-center justify-center">
-                    <i class="fa-solid fa-motorcycle text-xl"></i>
+                <div class="bg-brand-500 text-white p-1.5 rounded-xl shadow-inner flex items-center justify-center overflow-hidden w-10 h-10">
+                    <img src="logo-delivery-sos.png" alt="Logo" class="w-full h-full object-contain rounded-lg" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex'">
+                    <div id="fallback-logo" style="display:none;" class="w-full h-full items-center justify-center bg-brand-600 text-white rounded-lg">
+                        <i class="fa-solid fa-motorcycle text-lg"></i>
+                    </div>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-tight">MotoTaxi Pro <span class="text-xs bg-brand-600 text-white px-2 py-0.5 rounded-full ml-1">Honduras (L)</span></h1>
-                    <p class="text-xs text-gray-400">Control de Viajes y Cobros por Cliente</p>
+                    <h1 class="font-bold text-base sm:text-lg tracking-tight">⚡Delivery 𝗦.𝗢.𝗦̈⃝™</h1>
+                    <p class="text-[11px] text-gray-400">Control de Viajes y Cobros por Cliente (Honduras)</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -58,18 +67,18 @@
 
     <!-- Navigation Tabs -->
     <nav class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8">
-            <button onclick="switchTab('calendar')" id="nav-calendar" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-brand-500 text-brand-600 transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 overflow-x-auto">
+            <button onclick="switchTab('calendar')" id="nav-calendar" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-brand-500 text-brand-600 transition whitespace-nowrap">
                 <i class="fa-solid fa-calendar-days text-base"></i>
                 <span>Calendario & Viajes</span>
             </button>
-            <button onclick="switchTab('passengers')" id="nav-passengers" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
+            <button onclick="switchTab('passengers')" id="nav-passengers" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
                 <i class="fa-solid fa-users text-base"></i>
                 <span>Pasajeros (CRUD)</span>
             </button>
-            <button onclick="switchTab('finances')" id="nav-finances" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
+            <button onclick="switchTab('finances')" id="nav-finances" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
                 <i class="fa-solid fa-wallet text-base"></i>
-                <span>Resumen Quincenal & Cobros</span>
+                <span>Reportes y Cobros</span>
             </button>
         </div>
     </nav>
@@ -140,24 +149,37 @@
             </div>
         </section>
 
-        <!-- TAB 3: FINANCES & FORTNIGHT REPORT -->
+        <!-- TAB 3: REPORTES Y COBROS -->
         <section id="tab-finances" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                <!-- Controls & Passenger Selector -->
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-gray-100">
-                    <div class="flex flex-wrap items-center gap-3">
+                <!-- Controls & Filters -->
+                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 pb-6 border-b border-gray-100">
+                    <div class="flex flex-wrap items-end gap-3">
                         <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Tipo de Periodo</label>
+                            <select id="report-period-type" onchange="onReportPeriodChange()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="fortnight_1">1ª Quincena (Días 1 al 15)</option>
+                                <option value="fortnight_2">2ª Quincena (Días 16 al Fin)</option>
+                                <option value="full_month">Mes Completo</option>
+                                <option value="custom">Rango Personalizado</option>
+                            </select>
+                        </div>
+                        <div id="container-month-select">
                             <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Mes</label>
                             <select id="finance-month" onchange="renderFinances()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500">
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Quincena</label>
-                            <select id="finance-fortnight" onchange="renderFinances()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500">
-                                <option value="1">1ª Quincena (Días 1 al 15)</option>
-                                <option value="2">2ª Quincena (Días 16 al Fin de Mes)</option>
-                            </select>
+                        <!-- Custom Range Inputs (hidden by default) -->
+                        <div id="container-custom-range" class="flex items-center gap-2 hidden">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Desde</label>
+                                <input type="date" id="custom-start-date" onchange="renderFinances()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Hasta</label>
+                                <input type="date" id="custom-end-date" onchange="renderFinances()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Pasajero / Estado de Cuenta</label>
@@ -165,6 +187,12 @@
                                 <option value="all">-- Todos los Pasajeros --</option>
                                 <!-- Populated dynamically -->
                             </select>
+                        </div>
+                        <div class="flex items-center space-x-2 pt-2 sm:pt-0">
+                            <label class="flex items-center space-x-2 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200 cursor-pointer select-none">
+                                <input type="checkbox" id="checkbox-only-pending" onchange="renderFinances()" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                                <span class="text-xs font-bold text-amber-800">Solo pendientes por cobrar</span>
+                            </label>
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
@@ -183,27 +211,22 @@
                     </div>
                 </div>
 
-                <!-- KPI Cards with Status Breakdown -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- KPI Cards with Simplified Status Breakdown -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-brand-50 p-4 rounded-xl border border-brand-100">
-                        <p class="text-xs font-semibold text-brand-700 uppercase">Total Acumulado Cuenta</p>
+                        <p class="text-xs font-semibold text-brand-700 uppercase">Total Cuenta Acumulada</p>
                         <h3 id="kpi-total-account" class="text-2xl font-bold text-brand-900 mt-1">L 0.00</h3>
-                        <p class="text-xs text-brand-600 mt-1">Pendientes + Completados + Cobrados</p>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <p class="text-xs font-semibold text-blue-700 uppercase">Completados</p>
-                        <h3 id="kpi-completed-income" class="text-2xl font-bold text-blue-900 mt-1">L 0.00</h3>
-                        <p class="text-xs text-blue-600 mt-1"><span id="kpi-completed-count">0</span> viajes listos</p>
-                    </div>
-                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                        <p class="text-xs font-semibold text-emerald-700 uppercase">Cobrados (Pagados)</p>
-                        <h3 id="kpi-collected-income" class="text-2xl font-bold text-emerald-900 mt-1">L 0.00</h3>
-                        <p class="text-xs text-emerald-600 mt-1"><span id="kpi-collected-count">0</span> viajes pagados</p>
+                        <p class="text-xs text-brand-600 mt-1">Pendiente + Cobrado</p>
                     </div>
                     <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                        <p class="text-xs font-semibold text-amber-700 uppercase">Pendientes</p>
+                        <p class="text-xs font-semibold text-amber-700 uppercase">Pendiente por Cobrar</p>
                         <h3 id="kpi-pending-income" class="text-2xl font-bold text-amber-900 mt-1">L 0.00</h3>
-                        <p class="text-xs text-amber-600 mt-1"><span id="kpi-pending-count">0</span> viajes por cobrar</p>
+                        <p class="text-xs text-amber-600 mt-1"><span id="kpi-pending-count">0</span> viajes pendientes</p>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                        <p class="text-xs font-semibold text-emerald-700 uppercase">Ya Cobrado</p>
+                        <h3 id="kpi-collected-income" class="text-2xl font-bold text-emerald-900 mt-1">L 0.00</h3>
+                        <p class="text-xs text-emerald-600 mt-1"><span id="kpi-collected-count">0</span> viajes cobrados</p>
                     </div>
                     <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
                         <p class="text-xs font-semibold text-purple-700 uppercase">Extras / Ajustes</p>
@@ -214,7 +237,7 @@
 
                 <!-- Detailed Table -->
                 <div class="space-y-3">
-                    <h4 class="font-bold text-gray-900 text-sm">Detalle de Viajes en la Quincena (Desglose por Estado)</h4>
+                    <h4 class="font-bold text-gray-900 text-sm">Detalle de Viajes (Estados: Pendiente, Cobrado, Cancelado)</h4>
                     <div class="overflow-x-auto border border-gray-200 rounded-xl">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -421,7 +444,7 @@
         let state = {
             passengers: [],
             trips: [],
-            currentDate: new Date(), // Used for Calendar view
+            currentDate: new Date(),
             activeTab: 'calendar'
         };
 
@@ -442,6 +465,7 @@
             }
             setupFinanceMonthSelect();
             updateFinancePassengerSelect();
+            onReportPeriodChange();
             renderCurrentTab();
         }
 
@@ -450,7 +474,24 @@
             const savedTrips = localStorage.getItem(STORAGE_KEYS.TRIPS);
 
             state.passengers = savedPassengers ? JSON.parse(savedPassengers) : seedData.passengers;
-            state.trips = savedTrips ? JSON.parse(savedTrips) : [];
+            
+            if (savedTrips) {
+                let parsedTrips = JSON.parse(savedTrips);
+                // Migrate any "Completado" status to "Pendiente" as per v0.3.0 requirement
+                parsedTrips = parsedTrips.map(t => {
+                    if (t.status === 'Completado') {
+                        t.status = 'Pendiente';
+                    }
+                    // Ensure status is one of Pendiente, Cobrado, Cancelado
+                    if (!['Pendiente', 'Cobrado', 'Cancelado'].includes(t.status)) {
+                        t.status = 'Pendiente';
+                    }
+                    return t;
+                });
+                state.trips = parsedTrips;
+            } else {
+                state.trips = [];
+            }
         }
 
         function saveToStorage() {
@@ -459,7 +500,7 @@
             updateFinancePassengerSelect();
         }
 
-        // --- Honduras WhatsApp & Phone Helper ---
+        // --- Honduras WhatsApp & Phone Helper & Date Day-of-Week Initial ---
         function formatPhoneHonduras(phone) {
             if (!phone) return '';
             let clean = phone.replace(/\D/g, '');
@@ -482,6 +523,21 @@
             return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
         }
 
+        // Formats date YYYY-MM-DD to YYYY-MM-DD (D), (L), (M), (Mi), (J), (V), (S)
+        function formatDateWithDay(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            const d = new Date(year, month, day);
+            if (isNaN(d.getTime())) return dateStr;
+            const daysInitials = ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'];
+            const dayOfWeek = daysInitials[d.getDay()];
+            return `${dateStr} (${dayOfWeek})`;
+        }
+
         function generateSampleTrips() {
             const now = new Date();
             const year = now.getFullYear();
@@ -494,7 +550,7 @@
                 
                 let status = 'Pendiente';
                 if (day < now.getDate() - 3) status = 'Cobrado';
-                else if (day < now.getDate()) status = 'Completado';
+                else if (day < now.getDate()) status = 'Pendiente';
 
                 state.trips.push({
                     id: 'trip_' + Math.random().toString(36).substr(2, 9),
@@ -521,10 +577,10 @@
                 const nav = document.getElementById(`nav-${t}`);
                 if (t === tabId) {
                     sec.classList.remove('hidden');
-                    nav.className = "py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-brand-500 text-brand-600 transition";
+                    nav.className = "py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-brand-500 text-brand-600 transition whitespace-nowrap";
                 } else {
                     sec.classList.add('hidden');
-                    nav.className = "py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition";
+                    nav.className = "py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap";
                 }
             });
             renderCurrentTab();
@@ -615,7 +671,6 @@
                     const tripCard = document.createElement('div');
                     
                     let statusBg = 'bg-amber-50 border-amber-200 text-amber-800';
-                    if (trip.status === 'Completado') statusBg = 'bg-blue-50 border-blue-200 text-blue-800';
                     if (trip.status === 'Cobrado') statusBg = 'bg-emerald-50 border-emerald-200 text-emerald-800';
                     if (trip.status === 'Cancelado') statusBg = 'bg-red-50 border-red-200 text-red-800 line-through';
 
@@ -761,9 +816,8 @@
         function cycleTripStatus(id) {
             const trip = state.trips.find(t => t.id === id);
             if (trip) {
-                // Cycle: Pendiente -> Completado -> Cobrado -> Cancelado -> Pendiente
-                if (trip.status === 'Pendiente') trip.status = 'Completado';
-                else if (trip.status === 'Completado') trip.status = 'Cobrado';
+                // Cycle: Pendiente -> Cobrado -> Cancelado -> Pendiente
+                if (trip.status === 'Pendiente') trip.status = 'Cobrado';
                 else if (trip.status === 'Cobrado') trip.status = 'Cancelado';
                 else trip.status = 'Pendiente';
 
@@ -839,7 +893,7 @@
 
             filtered.forEach(passenger => {
                 const formattedPhone = formatPhoneHonduras(passenger.phone);
-                const waLink = getWhatsAppLink(passenger.phone, `Hola ${passenger.name}, le escribo de MotoTaxi Pro para coordinar sus viajes.`);
+                const waLink = getWhatsAppLink(passenger.phone, `Hola ${passenger.name}, le escribo de ⚡Delivery 𝗦.𝗢.𝗦̈⃝™ para coordinar sus viajes.`);
                 
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between space-y-4 hover:shadow-md transition";
@@ -902,7 +956,6 @@
             const rate = parseFloat(document.getElementById('pass-rate').value);
             const notes = document.getElementById('pass-notes').value;
 
-            // Basic validation for 8 digits Honduras phone
             let cleanPhone = phone.replace(/\D/g, '');
             if (cleanPhone.startsWith('504')) {
                 cleanPhone = cleanPhone.slice(3);
@@ -966,7 +1019,7 @@
             }
         }
 
-        // --- Finances & Fortnight Report Module ---
+        // --- Reportes y Cobros Module (v0.3.0) ---
         function setupFinanceMonthSelect() {
             const select = document.getElementById('finance-month');
             select.innerHTML = '';
@@ -980,6 +1033,13 @@
                 const selected = m === now.getMonth() ? 'selected' : '';
                 select.innerHTML += `<option value="${val}" ${selected}>${monthNames[m]} ${year}</option>`;
             }
+
+            // Also set default custom dates to current month start and end
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const lastDay = new Date(yyyy, now.getMonth() + 1, 0).getDate();
+            document.getElementById('custom-start-date').value = `${yyyy}-${mm}-01`;
+            document.getElementById('custom-end-date').value = `${yyyy}-${mm}-${lastDay}`;
         }
 
         function updateFinancePassengerSelect() {
@@ -992,29 +1052,57 @@
             select.value = currentVal;
         }
 
-        function getFilteredFortnightTrips() {
+        function onReportPeriodChange() {
+            const periodType = document.getElementById('report-period-type').value;
+            const containerMonth = document.getElementById('container-month-select');
+            const containerCustom = document.getElementById('container-custom-range');
+
+            if (periodType === 'custom') {
+                containerMonth.classList.add('hidden');
+                containerCustom.classList.remove('hidden');
+            } else {
+                containerCustom.classList.add('hidden');
+                containerMonth.classList.remove('hidden');
+            }
+            renderFinances();
+        }
+
+        function getFilteredTrips() {
+            const periodType = document.getElementById('report-period-type').value;
             const monthVal = document.getElementById('finance-month').value;
-            const fortnight = parseInt(document.getElementById('finance-fortnight').value);
             const passengerFilter = document.getElementById('finance-passenger-filter').value;
-
-            if (!monthVal) return [];
-
-            const [yearStr, monthStr] = monthVal.split('-');
-            const year = parseInt(yearStr);
-            const month = parseInt(monthStr) - 1;
+            const onlyPending = document.getElementById('checkbox-only-pending').checked;
 
             return state.trips.filter(t => {
                 if (!t.date || t.status === 'Cancelado') return false;
-                const [tYear, tMonth, tDay] = t.date.split('-').map(Number);
-                if (tYear !== year || (tMonth - 1) !== month) return false;
 
-                if (fortnight === 1) {
-                    if (!(tDay >= 1 && tDay <= 15)) return false;
+                // Date filtering based on period type
+                if (periodType === 'custom') {
+                    const start = document.getElementById('custom-start-date').value;
+                    const end = document.getElementById('custom-end-date').value;
+                    if (start && t.date < start) return false;
+                    if (end && t.date > end) return false;
                 } else {
-                    if (!(tDay >= 16)) return false;
+                    if (!monthVal) return false;
+                    const [yearStr, monthStr] = monthVal.split('-');
+                    const year = parseInt(yearStr);
+                    const month = parseInt(monthStr) - 1;
+                    const [tYear, tMonth, tDay] = t.date.split('-').map(Number);
+                    if (tYear !== year || (tMonth - 1) !== month) return false;
+
+                    if (periodType === 'fortnight_1') {
+                        if (!(tDay >= 1 && tDay <= 15)) return false;
+                    } else if (periodType === 'fortnight_2') {
+                        if (!(tDay >= 16)) return false;
+                    }
+                    // full_month does not restrict days further
                 }
 
                 if (passengerFilter !== 'all' && t.passengerId !== passengerFilter) {
+                    return false;
+                }
+
+                if (onlyPending && t.status !== 'Pendiente') {
                     return false;
                 }
 
@@ -1023,7 +1111,7 @@
         }
 
         function renderFinances() {
-            const fortnightTrips = getFilteredFortnightTrips();
+            const trips = getFilteredTrips();
             const passengerFilter = document.getElementById('finance-passenger-filter').value;
 
             // Show or hide WhatsApp / Copy buttons based on whether an individual passenger is selected
@@ -1037,23 +1125,21 @@
                 btnCopy.classList.add('hidden');
             }
 
-            let totalAccount = 0; // Accumulated total (Pendientes + Completados + Cobrados)
-            let completedIncome = 0;
-            let completedCount = 0;
-            let collectedIncome = 0;
-            let collectedCount = 0;
+            let totalAccount = 0; // Sum of Pendiente + Cobrado
             let pendingIncome = 0;
             let pendingCount = 0;
+            let collectedIncome = 0;
+            let collectedCount = 0;
             let extraIncome = 0;
 
             const tbody = document.getElementById('finance-table-body');
             tbody.innerHTML = '';
 
-            if (fortnightTrips.length === 0) {
+            if (trips.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">No hay registros de viajes para esta selección.</td></tr>`;
             } else {
-                fortnightTrips.sort((a, b) => a.date.localeCompare(b.date));
-                fortnightTrips.forEach(trip => {
+                trips.sort((a, b) => a.date.localeCompare(b.date));
+                trips.forEach(trip => {
                     const passenger = state.passengers.find(p => p.id === trip.passengerId) || { name: 'Pasajero Eliminado' };
                     const base = Number(trip.rate || 0);
                     const extra = Number(trip.extraCharges || 0);
@@ -1061,28 +1147,25 @@
 
                     extraIncome += extra;
 
-                    if (trip.status === 'Completado') {
-                        completedIncome += total;
-                        completedCount++;
+                    if (trip.status === 'Pendiente') {
+                        pendingIncome += total;
+                        pendingCount++;
                         totalAccount += total;
                     } else if (trip.status === 'Cobrado') {
                         collectedIncome += total;
                         collectedCount++;
                         totalAccount += total;
-                    } else if (trip.status === 'Pendiente') {
-                        pendingIncome += total;
-                        pendingCount++;
-                        totalAccount += total; // Without hiding pending trips in the total accumulated account
                     }
 
                     let badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200';
-                    if (trip.status === 'Completado') badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
                     if (trip.status === 'Cobrado') badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+
+                    const formattedDate = formatDateWithDay(trip.date);
 
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition";
                     tr.innerHTML = `
-                        <td class="p-3 font-medium text-gray-900">${trip.date}</td>
+                        <td class="p-3 font-medium text-gray-900">${formattedDate}</td>
                         <td class="p-3 font-medium text-gray-900">${passenger.name}</td>
                         <td class="p-3 text-gray-600">${trip.origin} ➔ ${trip.destination}</td>
                         <td class="p-3 text-right text-gray-700">L ${base.toFixed(2)}</td>
@@ -1094,7 +1177,6 @@
                         <td class="p-3 text-center">
                             <select onchange="setTripStatus('${trip.id}', this.value)" class="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-medium focus:outline-none focus:ring-1 focus:ring-brand-500">
                                 <option value="Pendiente" ${trip.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
-                                <option value="Completado" ${trip.status === 'Completado' ? 'selected' : ''}>Completado</option>
                                 <option value="Cobrado" ${trip.status === 'Cobrado' ? 'selected' : ''}>Cobrado</option>
                                 <option value="Cancelado" ${trip.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
                             </select>
@@ -1106,16 +1188,14 @@
 
             // Update KPI cards
             document.getElementById('kpi-total-account').innerText = `L ${totalAccount.toFixed(2)}`;
-            document.getElementById('kpi-completed-income').innerText = `L ${completedIncome.toFixed(2)}`;
-            document.getElementById('kpi-completed-count').innerText = completedCount;
-            document.getElementById('kpi-collected-income').innerText = `L ${collectedIncome.toFixed(2)}`;
-            document.getElementById('kpi-collected-count').innerText = collectedCount;
             document.getElementById('kpi-pending-income').innerText = `L ${pendingIncome.toFixed(2)}`;
             document.getElementById('kpi-pending-count').innerText = pendingCount;
+            document.getElementById('kpi-collected-income').innerText = `L ${collectedIncome.toFixed(2)}`;
+            document.getElementById('kpi-collected-count').innerText = collectedCount;
             document.getElementById('kpi-extra-income').innerText = `L ${extraIncome.toFixed(2)}`;
         }
 
-        // --- Account Statement WhatsApp & Clipboard Generation ---
+        // --- Account Statement WhatsApp & Clipboard Generation (v0.3.0 with Brand & Day Initials) ---
         function generateAccountStatementText() {
             const passengerId = document.getElementById('finance-passenger-filter').value;
             if (passengerId === 'all') return '';
@@ -1123,23 +1203,27 @@
             const passenger = state.passengers.find(p => p.id === passengerId);
             if (!passenger) return '';
 
-            const monthVal = document.getElementById('finance-month').value;
-            const fortnight = document.getElementById('finance-fortnight').value;
-            const [yearStr, monthStr] = monthVal.split('-');
-            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            const monthName = monthNames[parseInt(monthStr) - 1];
+            const periodType = document.getElementById('report-period-type').value;
+            let periodLabel = '';
+            if (periodType === 'fortnight_1') periodLabel = '1ª Quincena (Días 1–15)';
+            else if (periodType === 'fortnight_2') periodLabel = '2ª Quincena (Días 16–Fin)';
+            else if (periodType === 'full_month') periodLabel = 'Mes Completo';
+            else {
+                const start = document.getElementById('custom-start-date').value;
+                const end = document.getElementById('custom-end-date').value;
+                periodLabel = `Rango: ${start} al ${end}`;
+            }
 
-            const trips = getFilteredFortnightTrips();
+            const trips = getFilteredTrips();
 
-            let text = `*ESTADO DE CUENTA - MOTOTAXI PRO*\n`;
+            let text = `*ESTADO DE CUENTA - ⚡Delivery 𝗦.𝗢.𝗦̈⃝™*\n`;
             text += `Pasajero: *${passenger.name}*\n`;
-            text += `Período: *${fortnight}ª Quincena de ${monthName} ${yearStr}*\n\n`;
+            text += `Período: *${periodLabel}*\n\n`;
             text += `*Detalle de Viajes:*\n`;
 
             let totalAcc = 0;
-            let compSum = 0;
-            let collSum = 0;
             let pendSum = 0;
+            let collSum = 0;
 
             trips.forEach(t => {
                 const base = Number(t.rate || 0);
@@ -1147,11 +1231,11 @@
                 const tot = base + extra;
                 totalAcc += tot;
 
-                if (t.status === 'Completado') compSum += tot;
+                if (t.status === 'Pendiente') pendSum += tot;
                 else if (t.status === 'Cobrado') collSum += tot;
-                else if (t.status === 'Pendiente') pendSum += tot;
 
-                text += `• ${t.date} | ${t.origin} ➔ ${t.destination} (${t.shift})\n`;
+                const formattedDate = formatDateWithDay(t.date);
+                text += `• ${formattedDate} | ${t.origin} ➔ ${t.destination} (${t.shift})\n`;
                 text += `  Base: L ${base.toFixed(2)}`;
                 if (extra > 0) {
                     text += ` + Extra: L ${extra.toFixed(2)} (${t.extraReason || 'Adicional'})`;
@@ -1159,12 +1243,11 @@
                 text += `\n  Total: *L ${tot.toFixed(2)}* [${t.status}]\n`;
             });
 
-            text += `\n*Resumen de Estado:*\n`;
-            text += `• Completados: L ${compSum.toFixed(2)}\n`;
-            text += `• Cobrados: L ${collSum.toFixed(2)}\n`;
-            text += `• Pendientes: L ${pendSum.toFixed(2)}\n`;
-            text += `*TOTAL ACUMULADO A PAGAR: L ${totalAcc.toFixed(2)}*\n\n`;
-            text += `¡Gracias por su preferencia en MotoTaxi Pro! 🛵🇭🇳`;
+            text += `\n*Resumen de Cuenta:*\n`;
+            text += `• Pendiente por cobrar: L ${pendSum.toFixed(2)}\n`;
+            text += `• Ya cobrado (pagado): L ${collSum.toFixed(2)}\n`;
+            text += `*TOTAL ACUMULADO: L ${totalAcc.toFixed(2)}*\n\n`;
+            text += `¡Gracias por su preferencia en ⚡Delivery 𝗦.𝗢.𝗦̈⃝™! 🛵🇭🇳`;
 
             return { passenger, text };
         }
@@ -1214,7 +1297,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `mototaxi_honduras_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.setAttribute("download", `delivery_sos_backup_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -1247,7 +1330,7 @@
         }
 
         function resetDemoData() {
-            if (confirm('¿Restaurar datos de ejemplo de Honduras? Se sobrescribirán los datos actuales.')) {
+            if (confirm('¿Restaurar datos de ejemplo de ⚡Delivery 𝗦.𝗢.𝗦̈⃝™? Se sobrescribirán los datos actuales.')) {
                 state.passengers = seedData.passengers;
                 state.trips = [];
                 generateSampleTrips();
