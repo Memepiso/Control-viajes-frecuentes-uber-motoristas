@@ -2,14 +2,15 @@
   HISTORIAL DE VERSIONES:
   - v0.1.0 (2026-11-23): Versión inicial (Calendario interactivo, CRUD de pasajeros, resumen quincenal y respaldo JSON).
   - v0.2.0 (2026-11-23): Adaptación a Honduras (Moneda Lempiras L, teléfonos de 8 dígitos, prefijo +504 en WhatsApp, estado de cuenta por cliente).
-  - v0.3.0 (2026-11-23): Nueva marca "⚡Delivery 𝗦.𝗢.𝗦̈⃝™", soporte de logo local "logo-delivery-sos.png" con icono de respaldo, simplificación de estados de viaje (Pendiente, Cobrado, Cancelado con migración automática de Completado), filtros de reportes avanzados (Quincenas, Mes completo, Rango personalizado y filtro "Solo pendientes por cobrar"), y formato de fechas con inicial del día de la semana (ej. 2026-11-02 (L)).
+  - v0.3.0 (2026-11-23): Nueva marca y soporte de logo local con respaldo, simplificación de estados de viaje, filtros avanzados de reportes y fechas con inicial del día.
+  - v0.4.0 (2026-11-23): Nombre de marca limpio "⚡ Delivery S.O.S" con contenedor de logo contrastado, cuatro estados de viaje ("Agendado", "Pendiente", "Cobrado", "Cancelado"), columna dedicada "DÍA" en tabla de reportes, botón de cobro en lote para pendientes visibles, y documentación completa.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡Delivery 𝗦.𝗢.𝗦̈⃝™ - Gestión de Viajes y Cobros (Honduras)</title>
+    <title>⚡ Delivery S.O.S - Gestión de Viajes y Cobros (Honduras)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -45,15 +46,15 @@
     <header class="bg-gray-900 text-white shadow-md sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-brand-500 text-white p-1.5 rounded-xl shadow-inner flex items-center justify-center overflow-hidden w-10 h-10">
-                    <img src="logo-delivery-sos.png" alt="Logo" class="w-full h-full object-contain rounded-lg" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex'">
-                    <div id="fallback-logo" style="display:none;" class="w-full h-full items-center justify-center bg-brand-600 text-white rounded-lg">
-                        <i class="fa-solid fa-motorcycle text-lg"></i>
+                <div class="bg-white p-1 rounded-full shadow-md flex items-center justify-center overflow-hidden w-10 h-10 border-2 border-brand-500">
+                    <img src="logo-delivery-sos.png" alt="Logo" class="w-full h-full object-contain rounded-full" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex'">
+                    <div id="fallback-logo" style="display:none;" class="w-full h-full items-center justify-center bg-brand-600 text-white rounded-full">
+                        <i class="fa-solid fa-motorcycle text-sm"></i>
                     </div>
                 </div>
                 <div>
-                    <h1 class="font-bold text-base sm:text-lg tracking-tight">⚡Delivery 𝗦.𝗢.𝗦̈⃝™</h1>
-                    <p class="text-[11px] text-gray-400">Control de Viajes y Cobros por Cliente (Honduras)</p>
+                    <h1 class="font-bold text-base sm:text-lg tracking-tight">⚡ Delivery S.O.S</h1>
+                    <p class="text-[11px] text-gray-400">Control de Viajes y Cobros (Honduras)</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -170,7 +171,7 @@
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
-                        <!-- Custom Range Inputs (hidden by default) -->
+                        <!-- Custom Range Inputs -->
                         <div id="container-custom-range" class="flex items-center gap-2 hidden">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Desde</label>
@@ -196,6 +197,10 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
+                        <button id="btn-batch-collect" onclick="batchMarkCollected()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition flex items-center space-x-2 hidden" title="Actualiza todos los viajes pendientes visibles a Cobrado">
+                            <i class="fa-solid fa-check-double text-base"></i>
+                            <span>Marcar pendientes visibles como Cobrados</span>
+                        </button>
                         <button id="btn-whatsapp-account" onclick="sendAccountWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition flex items-center space-x-2 hidden">
                             <i class="fa-brands fa-whatsapp text-base"></i>
                             <span>Enviar cuenta por WhatsApp</span>
@@ -211,12 +216,12 @@
                     </div>
                 </div>
 
-                <!-- KPI Cards with Simplified Status Breakdown -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- KPI Cards with 4-State Breakdown -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div class="bg-brand-50 p-4 rounded-xl border border-brand-100">
-                        <p class="text-xs font-semibold text-brand-700 uppercase">Total Cuenta Acumulada</p>
+                        <p class="text-xs font-semibold text-brand-700 uppercase">Total Realizado (Pend + Cob)</p>
                         <h3 id="kpi-total-account" class="text-2xl font-bold text-brand-900 mt-1">L 0.00</h3>
-                        <p class="text-xs text-brand-600 mt-1">Pendiente + Cobrado</p>
+                        <p class="text-xs text-brand-600 mt-1">Acumulado de viajes realizados</p>
                     </div>
                     <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
                         <p class="text-xs font-semibold text-amber-700 uppercase">Pendiente por Cobrar</p>
@@ -228,6 +233,11 @@
                         <h3 id="kpi-collected-income" class="text-2xl font-bold text-emerald-900 mt-1">L 0.00</h3>
                         <p class="text-xs text-emerald-600 mt-1"><span id="kpi-collected-count">0</span> viajes cobrados</p>
                     </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-xs font-semibold text-blue-700 uppercase">Agendados (Futuros)</p>
+                        <h3 id="kpi-scheduled-income" class="text-2xl font-bold text-blue-900 mt-1">L 0.00</h3>
+                        <p class="text-xs text-blue-600 mt-1"><span id="kpi-scheduled-count">0</span> viajes agendados</p>
+                    </div>
                     <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
                         <p class="text-xs font-semibold text-purple-700 uppercase">Extras / Ajustes</p>
                         <h3 id="kpi-extra-income" class="text-2xl font-bold text-purple-900 mt-1">L 0.00</h3>
@@ -235,14 +245,15 @@
                     </div>
                 </div>
 
-                <!-- Detailed Table -->
+                <!-- Detailed Table with Dedicated DÍA Column -->
                 <div class="space-y-3">
-                    <h4 class="font-bold text-gray-900 text-sm">Detalle de Viajes (Estados: Pendiente, Cobrado, Cancelado)</h4>
+                    <h4 class="font-bold text-gray-900 text-sm">Detalle de Viajes (Estados: Agendado, Pendiente, Cobrado, Cancelado)</h4>
                     <div class="overflow-x-auto border border-gray-200 rounded-xl">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider font-semibold border-b border-gray-200">
                                     <th class="p-3">Fecha</th>
+                                    <th class="p-3 text-center">Día</th>
                                     <th class="p-3">Pasajero</th>
                                     <th class="p-3">Ruta</th>
                                     <th class="p-3 text-right">Tarifa Base (L)</th>
@@ -477,13 +488,13 @@
             
             if (savedTrips) {
                 let parsedTrips = JSON.parse(savedTrips);
-                // Migrate any "Completado" status to "Pendiente" as per v0.3.0 requirement
+                // Migrate statuses to v0.4.0 exact four states: Agendado, Pendiente, Cobrado, Cancelado
                 parsedTrips = parsedTrips.map(t => {
-                    if (t.status === 'Completado') {
+                    if (t.status === 'Completado' || t.status === 'Realizado') {
                         t.status = 'Pendiente';
                     }
-                    // Ensure status is one of Pendiente, Cobrado, Cancelado
-                    if (!['Pendiente', 'Cobrado', 'Cancelado'].includes(t.status)) {
+                    if (!['Agendado', 'Pendiente', 'Cobrado', 'Cancelado'].includes(t.status)) {
+                        // Default fallback based on date or past status
                         t.status = 'Pendiente';
                     }
                     return t;
@@ -523,19 +534,19 @@
             return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
         }
 
-        // Formats date YYYY-MM-DD to YYYY-MM-DD (D), (L), (M), (Mi), (J), (V), (S)
-        function formatDateWithDay(dateStr) {
-            if (!dateStr) return '';
+        // Returns { dateStr, dayInitial }
+        function getDatePartsWithDay(dateStr) {
+            if (!dateStr) return { dateStr: '', dayInitial: '' };
             const parts = dateStr.split('-');
-            if (parts.length !== 3) return dateStr;
+            if (parts.length !== 3) return { dateStr, dayInitial: '' };
             const year = parseInt(parts[0]);
             const month = parseInt(parts[1]) - 1;
             const day = parseInt(parts[2]);
             const d = new Date(year, month, day);
-            if (isNaN(d.getTime())) return dateStr;
+            if (isNaN(d.getTime())) return { dateStr, dayInitial: '' };
             const daysInitials = ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'];
             const dayOfWeek = daysInitials[d.getDay()];
-            return `${dateStr} (${dayOfWeek})`;
+            return { dateStr, dayInitial: dayOfWeek };
         }
 
         function generateSampleTrips() {
@@ -548,7 +559,7 @@
                 const passenger = state.passengers[index % state.passengers.length];
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
-                let status = 'Pendiente';
+                let status = 'Agendado';
                 if (day < now.getDate() - 3) status = 'Cobrado';
                 else if (day < now.getDate()) status = 'Pendiente';
 
@@ -670,7 +681,8 @@
                     const passenger = state.passengers.find(p => p.id === trip.passengerId) || { name: 'Pasajero Desconocido' };
                     const tripCard = document.createElement('div');
                     
-                    let statusBg = 'bg-amber-50 border-amber-200 text-amber-800';
+                    let statusBg = 'bg-blue-50 border-blue-200 text-blue-800'; // Agendado
+                    if (trip.status === 'Pendiente') statusBg = 'bg-amber-50 border-amber-200 text-amber-800';
                     if (trip.status === 'Cobrado') statusBg = 'bg-emerald-50 border-emerald-200 text-emerald-800';
                     if (trip.status === 'Cancelado') statusBg = 'bg-red-50 border-red-200 text-red-800 line-through';
 
@@ -774,7 +786,7 @@
                     extraReason: '',
                     shift,
                     notes,
-                    status: 'Pendiente'
+                    status: 'Agendado'
                 };
                 state.trips.push(newTrip);
                 showToast('Viaje programado con éxito');
@@ -816,10 +828,11 @@
         function cycleTripStatus(id) {
             const trip = state.trips.find(t => t.id === id);
             if (trip) {
-                // Cycle: Pendiente -> Cobrado -> Cancelado -> Pendiente
-                if (trip.status === 'Pendiente') trip.status = 'Cobrado';
+                // Cycle: Agendado -> Pendiente -> Cobrado -> Cancelado -> Agendado
+                if (trip.status === 'Agendado') trip.status = 'Pendiente';
+                else if (trip.status === 'Pendiente') trip.status = 'Cobrado';
                 else if (trip.status === 'Cobrado') trip.status = 'Cancelado';
-                else trip.status = 'Pendiente';
+                else trip.status = 'Agendado';
 
                 saveToStorage();
                 renderCurrentTab();
@@ -893,7 +906,7 @@
 
             filtered.forEach(passenger => {
                 const formattedPhone = formatPhoneHonduras(passenger.phone);
-                const waLink = getWhatsAppLink(passenger.phone, `Hola ${passenger.name}, le escribo de ⚡Delivery 𝗦.𝗢.𝗦̈⃝™ para coordinar sus viajes.`);
+                const waLink = getWhatsAppLink(passenger.phone, `Hola ${passenger.name}, le escribo de ⚡ Delivery S.O.S para coordinar sus viajes.`);
                 
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between space-y-4 hover:shadow-md transition";
@@ -1019,7 +1032,7 @@
             }
         }
 
-        // --- Reportes y Cobros Module (v0.3.0) ---
+        // --- Reportes y Cobros Module (v0.4.0) ---
         function setupFinanceMonthSelect() {
             const select = document.getElementById('finance-month');
             select.innerHTML = '';
@@ -1034,7 +1047,6 @@
                 select.innerHTML += `<option value="${val}" ${selected}>${monthNames[m]} ${year}</option>`;
             }
 
-            // Also set default custom dates to current month start and end
             const yyyy = now.getFullYear();
             const mm = String(now.getMonth() + 1).padStart(2, '0');
             const lastDay = new Date(yyyy, now.getMonth() + 1, 0).getDate();
@@ -1076,7 +1088,6 @@
             return state.trips.filter(t => {
                 if (!t.date || t.status === 'Cancelado') return false;
 
-                // Date filtering based on period type
                 if (periodType === 'custom') {
                     const start = document.getElementById('custom-start-date').value;
                     const end = document.getElementById('custom-end-date').value;
@@ -1095,7 +1106,6 @@
                     } else if (periodType === 'fortnight_2') {
                         if (!(tDay >= 16)) return false;
                     }
-                    // full_month does not restrict days further
                 }
 
                 if (passengerFilter !== 'all' && t.passengerId !== passengerFilter) {
@@ -1114,9 +1124,11 @@
             const trips = getFilteredTrips();
             const passengerFilter = document.getElementById('finance-passenger-filter').value;
 
-            // Show or hide WhatsApp / Copy buttons based on whether an individual passenger is selected
+            // Show or hide WhatsApp / Copy / Batch Collect buttons
             const btnWa = document.getElementById('btn-whatsapp-account');
             const btnCopy = document.getElementById('btn-copy-account');
+            const btnBatch = document.getElementById('btn-batch-collect');
+
             if (passengerFilter !== 'all') {
                 btnWa.classList.remove('hidden');
                 btnCopy.classList.remove('hidden');
@@ -1125,18 +1137,28 @@
                 btnCopy.classList.add('hidden');
             }
 
-            let totalAccount = 0; // Sum of Pendiente + Cobrado
+            // Check if there are visible "Pendiente" trips for batch collection button
+            const visiblePendings = trips.filter(t => t.status === 'Pendiente');
+            if (visiblePendings.length > 0) {
+                btnBatch.classList.remove('hidden');
+            } else {
+                btnBatch.classList.add('hidden');
+            }
+
+            let totalRealized = 0; // Pendiente + Cobrado
             let pendingIncome = 0;
             let pendingCount = 0;
             let collectedIncome = 0;
             let collectedCount = 0;
+            let scheduledIncome = 0;
+            let scheduledCount = 0;
             let extraIncome = 0;
 
             const tbody = document.getElementById('finance-table-body');
             tbody.innerHTML = '';
 
             if (trips.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">No hay registros de viajes para esta selección.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-gray-400">No hay registros de viajes para esta selección.</td></tr>`;
             } else {
                 trips.sort((a, b) => a.date.localeCompare(b.date));
                 trips.forEach(trip => {
@@ -1150,22 +1172,27 @@
                     if (trip.status === 'Pendiente') {
                         pendingIncome += total;
                         pendingCount++;
-                        totalAccount += total;
+                        totalRealized += total;
                     } else if (trip.status === 'Cobrado') {
                         collectedIncome += total;
                         collectedCount++;
-                        totalAccount += total;
+                        totalRealized += total;
+                    } else if (trip.status === 'Agendado') {
+                        scheduledIncome += total;
+                        scheduledCount++;
                     }
 
-                    let badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200';
+                    let badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200'; // Agendado
+                    if (trip.status === 'Pendiente') badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200';
                     if (trip.status === 'Cobrado') badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
 
-                    const formattedDate = formatDateWithDay(trip.date);
+                    const { dateStr, dayInitial } = getDatePartsWithDay(trip.date);
 
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition";
                     tr.innerHTML = `
-                        <td class="p-3 font-medium text-gray-900">${formattedDate}</td>
+                        <td class="p-3 font-medium text-gray-900">${dateStr}</td>
+                        <td class="p-3 text-center font-bold text-brand-700 bg-gray-50/50">${dayInitial}</td>
                         <td class="p-3 font-medium text-gray-900">${passenger.name}</td>
                         <td class="p-3 text-gray-600">${trip.origin} ➔ ${trip.destination}</td>
                         <td class="p-3 text-right text-gray-700">L ${base.toFixed(2)}</td>
@@ -1176,6 +1203,7 @@
                         </td>
                         <td class="p-3 text-center">
                             <select onchange="setTripStatus('${trip.id}', this.value)" class="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-medium focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                <option value="Agendado" ${trip.status === 'Agendado' ? 'selected' : ''}>Agendado</option>
                                 <option value="Pendiente" ${trip.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
                                 <option value="Cobrado" ${trip.status === 'Cobrado' ? 'selected' : ''}>Cobrado</option>
                                 <option value="Cancelado" ${trip.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
@@ -1187,15 +1215,36 @@
             }
 
             // Update KPI cards
-            document.getElementById('kpi-total-account').innerText = `L ${totalAccount.toFixed(2)}`;
+            document.getElementById('kpi-total-account').innerText = `L ${totalRealized.toFixed(2)}`;
             document.getElementById('kpi-pending-income').innerText = `L ${pendingIncome.toFixed(2)}`;
             document.getElementById('kpi-pending-count').innerText = pendingCount;
             document.getElementById('kpi-collected-income').innerText = `L ${collectedIncome.toFixed(2)}`;
             document.getElementById('kpi-collected-count').innerText = collectedCount;
+            document.getElementById('kpi-scheduled-income').innerText = `L ${scheduledIncome.toFixed(2)}`;
+            document.getElementById('kpi-scheduled-count').innerText = scheduledCount;
             document.getElementById('kpi-extra-income').innerText = `L ${extraIncome.toFixed(2)}`;
         }
 
-        // --- Account Statement WhatsApp & Clipboard Generation (v0.3.0 with Brand & Day Initials) ---
+        // Batch collection function
+        function batchMarkCollected() {
+            const trips = getFilteredTrips();
+            const pendings = trips.filter(t => t.status === 'Pendiente');
+            if (pendings.length === 0) return;
+
+            if (confirm(`¿Marcar ${pendings.length} viajes pendientes visibles como Cobrados?`)) {
+                pendings.forEach(t => {
+                    const tripObj = state.trips.find(item => item.id === t.id);
+                    if (tripObj) {
+                        tripObj.status = 'Cobrado';
+                    }
+                });
+                saveToStorage();
+                renderFinances();
+                showToast(`${pendings.length} viajes marcados como Cobrados`);
+            }
+        }
+
+        // --- Account Statement WhatsApp & Clipboard Generation (v0.4.0) ---
         function generateAccountStatementText() {
             const passengerId = document.getElementById('finance-passenger-filter').value;
             if (passengerId === 'all') return '';
@@ -1216,12 +1265,12 @@
 
             const trips = getFilteredTrips();
 
-            let text = `*ESTADO DE CUENTA - ⚡Delivery 𝗦.𝗢.𝗦̈⃝™*\n`;
+            let text = `*ESTADO DE CUENTA - ⚡ Delivery S.O.S*\n`;
             text += `Pasajero: *${passenger.name}*\n`;
             text += `Período: *${periodLabel}*\n\n`;
             text += `*Detalle de Viajes:*\n`;
 
-            let totalAcc = 0;
+            let totalRealized = 0;
             let pendSum = 0;
             let collSum = 0;
 
@@ -1229,13 +1278,19 @@
                 const base = Number(t.rate || 0);
                 const extra = Number(t.extraCharges || 0);
                 const tot = base + extra;
-                totalAcc += tot;
 
-                if (t.status === 'Pendiente') pendSum += tot;
-                else if (t.status === 'Cobrado') collSum += tot;
+                if (t.status === 'Pendiente') {
+                    pendSum += tot;
+                    totalRealized += tot;
+                } else if (t.status === 'Cobrado') {
+                    collSum += tot;
+                    totalRealized += tot;
+                }
 
-                const formattedDate = formatDateWithDay(t.date);
-                text += `• ${formattedDate} | ${t.origin} ➔ ${t.destination} (${t.shift})\n`;
+                const { dateStr, dayInitial } = getDatePartsWithDay(t.date);
+                const formattedWithDay = dayInitial ? `${dateStr} (${dayInitial})` : dateStr;
+
+                text += `• ${formattedWithDay} | ${t.origin} ➔ ${t.destination} (${t.shift})\n`;
                 text += `  Base: L ${base.toFixed(2)}`;
                 if (extra > 0) {
                     text += ` + Extra: L ${extra.toFixed(2)} (${t.extraReason || 'Adicional'})`;
@@ -1246,8 +1301,8 @@
             text += `\n*Resumen de Cuenta:*\n`;
             text += `• Pendiente por cobrar: L ${pendSum.toFixed(2)}\n`;
             text += `• Ya cobrado (pagado): L ${collSum.toFixed(2)}\n`;
-            text += `*TOTAL ACUMULADO: L ${totalAcc.toFixed(2)}*\n\n`;
-            text += `¡Gracias por su preferencia en ⚡Delivery 𝗦.𝗢.𝗦̈⃝™! 🛵🇭🇳`;
+            text += `*TOTAL ACUMULADO REALIZADO: L ${totalRealized.toFixed(2)}*\n\n`;
+            text += `¡Gracias por su preferencia en ⚡ Delivery S.O.S! 🛵🇭🇳`;
 
             return { passenger, text };
         }
@@ -1330,7 +1385,7 @@
         }
 
         function resetDemoData() {
-            if (confirm('¿Restaurar datos de ejemplo de ⚡Delivery 𝗦.𝗢.𝗦̈⃝™? Se sobrescribirán los datos actuales.')) {
+            if (confirm('¿Restaurar datos de ejemplo de ⚡ Delivery S.O.S? Se sobrescribirán los datos actuales.')) {
                 state.passengers = seedData.passengers;
                 state.trips = [];
                 generateSampleTrips();
