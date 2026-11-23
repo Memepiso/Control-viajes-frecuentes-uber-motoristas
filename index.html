@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MotoTaxi Pro - Gestión de Viajes y Finanzas</title>
+    <title>MotoTaxi Pro - Gestión de Viajes y Finanzas (Honduras)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -43,8 +43,8 @@
                     <i class="fa-solid fa-motorcycle text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-tight">MotoTaxi Pro</h1>
-                    <p class="text-xs text-gray-400">Control de Viajes y Finanzas</p>
+                    <h1 class="font-bold text-lg tracking-tight">MotoTaxi Pro <span class="text-xs bg-brand-600 text-white px-2 py-0.5 rounded-full ml-1">Honduras (L)</span></h1>
+                    <p class="text-xs text-gray-400">Control de Viajes y Cobros por Cliente</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -69,7 +69,7 @@
             </button>
             <button onclick="switchTab('finances')" id="nav-finances" class="py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
                 <i class="fa-solid fa-wallet text-base"></i>
-                <span>Resumen Quincenal</span>
+                <span>Resumen Quincenal & Cobros</span>
             </button>
         </div>
     </nav>
@@ -126,7 +126,7 @@
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                         <i class="fa-solid fa-search"></i>
                     </span>
-                    <input type="text" id="passenger-search" oninput="renderPassengers()" placeholder="Buscar pasajero por nombre, teléfono o ruta..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    <input type="text" id="passenger-search" oninput="renderPassengers()" placeholder="Buscar pasajero por nombre, teléfono u Honduras (8 dígitos)..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
                 </div>
                 <button onclick="openPassengerModal()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:shadow transition flex items-center justify-center space-x-2">
                     <i class="fa-solid fa-user-plus"></i>
@@ -143,8 +143,8 @@
         <!-- TAB 3: FINANCES & FORTNIGHT REPORT -->
         <section id="tab-finances" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                <!-- Controls -->
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-gray-100">
+                <!-- Controls & Passenger Selector -->
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-gray-100">
                     <div class="flex flex-wrap items-center gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Mes</label>
@@ -159,8 +159,23 @@
                                 <option value="2">2ª Quincena (Días 16 al Fin de Mes)</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Pasajero / Estado de Cuenta</label>
+                            <select id="finance-passenger-filter" onchange="renderFinances()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="all">-- Todos los Pasajeros --</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
                     </div>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="btn-whatsapp-account" onclick="sendAccountWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition flex items-center space-x-2 hidden">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                            <span>Enviar cuenta por WhatsApp</span>
+                        </button>
+                        <button id="btn-copy-account" onclick="copyAccountText()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition flex items-center space-x-2 hidden">
+                            <i class="fa-solid fa-copy text-sm"></i>
+                            <span>Copiar Texto</span>
+                        </button>
                         <button onclick="printReport()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center space-x-2">
                             <i class="fa-solid fa-print"></i>
                             <span>Imprimir / PDF</span>
@@ -168,33 +183,38 @@
                     </div>
                 </div>
 
-                <!-- KPI Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- KPI Cards with Status Breakdown -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div class="bg-brand-50 p-4 rounded-xl border border-brand-100">
-                        <p class="text-xs font-semibold text-brand-700 uppercase">Ingreso Total</p>
-                        <h3 id="kpi-total-income" class="text-2xl font-bold text-brand-900 mt-1">$0.00</h3>
-                        <p class="text-xs text-brand-600 mt-1"><span id="kpi-completed-trips">0</span> viajes completados</p>
+                        <p class="text-xs font-semibold text-brand-700 uppercase">Total Acumulado Cuenta</p>
+                        <h3 id="kpi-total-account" class="text-2xl font-bold text-brand-900 mt-1">L 0.00</h3>
+                        <p class="text-xs text-brand-600 mt-1">Pendientes + Completados + Cobrados</p>
                     </div>
                     <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <p class="text-xs font-semibold text-blue-700 uppercase">Tarifas Base</p>
-                        <h3 id="kpi-base-income" class="text-2xl font-bold text-blue-900 mt-1">$0.00</h3>
-                        <p class="text-xs text-blue-600 mt-1">Sin cobros extra</p>
+                        <p class="text-xs font-semibold text-blue-700 uppercase">Completados</p>
+                        <h3 id="kpi-completed-income" class="text-2xl font-bold text-blue-900 mt-1">L 0.00</h3>
+                        <p class="text-xs text-blue-600 mt-1"><span id="kpi-completed-count">0</span> viajes listos</p>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                        <p class="text-xs font-semibold text-emerald-700 uppercase">Cobrados (Pagados)</p>
+                        <h3 id="kpi-collected-income" class="text-2xl font-bold text-emerald-900 mt-1">L 0.00</h3>
+                        <p class="text-xs text-emerald-600 mt-1"><span id="kpi-collected-count">0</span> viajes pagados</p>
                     </div>
                     <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                        <p class="text-xs font-semibold text-amber-700 uppercase">Cobros Extra / Ajustes</p>
-                        <h3 id="kpi-extra-income" class="text-2xl font-bold text-amber-900 mt-1">$0.00</h3>
-                        <p class="text-xs text-amber-600 mt-1">Paradas extra / cambios</p>
+                        <p class="text-xs font-semibold text-amber-700 uppercase">Pendientes</p>
+                        <h3 id="kpi-pending-income" class="text-2xl font-bold text-amber-900 mt-1">L 0.00</h3>
+                        <p class="text-xs text-amber-600 mt-1"><span id="kpi-pending-count">0</span> viajes por cobrar</p>
                     </div>
                     <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                        <p class="text-xs font-semibold text-purple-700 uppercase">Promedio por Viaje</p>
-                        <h3 id="kpi-avg-income" class="text-2xl font-bold text-purple-900 mt-1">$0.00</h3>
-                        <p class="text-xs text-purple-600 mt-1">Tarifa efectiva</p>
+                        <p class="text-xs font-semibold text-purple-700 uppercase">Extras / Ajustes</p>
+                        <h3 id="kpi-extra-income" class="text-2xl font-bold text-purple-900 mt-1">L 0.00</h3>
+                        <p class="text-xs text-purple-600 mt-1">Paradas / adicionales</p>
                     </div>
                 </div>
 
                 <!-- Detailed Table -->
                 <div class="space-y-3">
-                    <h4 class="font-bold text-gray-900 text-sm">Detalle de Viajes en la Quincena</h4>
+                    <h4 class="font-bold text-gray-900 text-sm">Detalle de Viajes en la Quincena (Desglose por Estado)</h4>
                     <div class="overflow-x-auto border border-gray-200 rounded-xl">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -202,10 +222,11 @@
                                     <th class="p-3">Fecha</th>
                                     <th class="p-3">Pasajero</th>
                                     <th class="p-3">Ruta</th>
-                                    <th class="p-3 text-right">Tarifa Base</th>
-                                    <th class="p-3 text-right">Extras</th>
-                                    <th class="p-3 text-right">Total</th>
+                                    <th class="p-3 text-right">Tarifa Base (L)</th>
+                                    <th class="p-3 text-right">Extras (L)</th>
+                                    <th class="p-3 text-right">Total (L)</th>
                                     <th class="p-3 text-center">Estado</th>
+                                    <th class="p-3 text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="finance-table-body" class="divide-y divide-gray-200 text-sm">
@@ -252,8 +273,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tarifa Base ($)</label>
-                        <input type="number" step="0.01" id="trip-rate" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tarifa Base (Lempiras)</label>
+                        <input type="number" step="0.01" id="trip-rate" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 100.00">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Turno / Horario</label>
@@ -291,8 +312,8 @@
                     <p id="adj-trip-info" class="text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-200 font-medium">Información del viaje...</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Monto Extra / Cobro Adicional ($)</label>
-                    <input type="number" step="0.01" id="adj-amount" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 20.00">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Monto Extra / Cobro Adicional (Lempiras)</label>
+                    <input type="number" step="0.01" id="adj-amount" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 25.00">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Motivo del Ajuste</label>
@@ -319,25 +340,26 @@
                 <input type="hidden" id="pass-id">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nombre Completo</label>
-                    <input type="text" id="pass-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. María Pérez">
+                    <input type="text" id="pass-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Carlos Mendoza">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Teléfono / WhatsApp</label>
-                    <input type="text" id="pass-phone" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 555-1234-5678">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Teléfono / WhatsApp (Honduras - 8 dígitos)</label>
+                    <input type="text" id="pass-phone" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 98765432 o 9876-5432">
+                    <p class="text-[11px] text-gray-400 mt-1">Se antepondrá automáticamente +504 para enlaces de WhatsApp.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Origen Frecuente</label>
-                        <input type="text" id="pass-origin" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Casa">
+                        <input type="text" id="pass-origin" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Col. Kennedy">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Destino Frecuente</label>
-                        <input type="text" id="pass-destination" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Trabajo">
+                        <input type="text" id="pass-destination" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. Centro">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tarifa Predeterminada ($)</label>
-                    <input type="number" step="0.01" id="pass-rate" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 50.00">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tarifa Predeterminada (Lempiras)</label>
+                    <input type="number" step="0.01" id="pass-rate" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ej. 80.00">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Notas / Observaciones</label>
@@ -375,7 +397,7 @@
                 </div>
                 <div class="pt-4 border-t border-gray-100">
                     <button onclick="resetDemoData()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl text-sm font-semibold transition border border-red-200">
-                        Restaurar Datos de Ejemplo
+                        Restaurar Datos de Ejemplo (Honduras)
                     </button>
                 </div>
             </div>
@@ -392,8 +414,8 @@
     <script>
         // --- State Management & LocalStorage ---
         const STORAGE_KEYS = {
-            PASSENGERS: 'mototaxi_passengers',
-            TRIPS: 'mototaxi_trips'
+            PASSENGERS: 'mototaxi_passengers_hn',
+            TRIPS: 'mototaxi_trips_hn'
         };
 
         let state = {
@@ -403,23 +425,23 @@
             activeTab: 'calendar'
         };
 
-        // Default Seed Data
+        // Default Seed Data adapted to Honduras (Lempiras, 8-digit phones)
         const seedData = {
             passengers: [
-                { id: 'p1', name: 'Carlos Mendoza', phone: '555-0192', origin: 'Col. Las Flores', destination: 'Centro Financiero', rate: 60.00, notes: 'Viaje matutino diario' },
-                { id: 'p2', name: 'Sofía Rivas', phone: '555-8832', origin: 'Residencial Los Pinos', destination: 'Universidad Central', rate: 75.00, notes: 'Pago semanal puntual' },
-                { id: 'p3', name: 'Roberto Gómez', phone: '555-4419', origin: 'Mercado Municipal', destination: 'Col. San José', rate: 50.00, notes: 'A veces lleva carga ligera' }
+                { id: 'p1', name: 'Carlos Mendoza', phone: '98765432', origin: 'Col. Las Hadas', destination: 'Boulevard Morazán', rate: 120.00, notes: 'Viaje matutino diario' },
+                { id: 'p2', name: 'Sofía Rivas', phone: '33124578', origin: 'Residencial Los Pinos', destination: 'UNAH', rate: 150.00, notes: 'Pago quincenal puntual' },
+                { id: 'p3', name: 'Roberto Gómez', phone: '88992211', origin: 'Mercado Mayoreo', destination: 'Col. San José', rate: 100.00, notes: 'A veces lleva carga ligera' }
             ],
             trips: []
         };
 
         function initApp() {
             loadFromStorage();
-            // If trips is empty, seed a few trips for the current month
             if (state.trips.length === 0) {
                 generateSampleTrips();
             }
             setupFinanceMonthSelect();
+            updateFinancePassengerSelect();
             renderCurrentTab();
         }
 
@@ -434,6 +456,30 @@
         function saveToStorage() {
             localStorage.setItem(STORAGE_KEYS.PASSENGERS, JSON.stringify(state.passengers));
             localStorage.setItem(STORAGE_KEYS.TRIPS, JSON.stringify(state.trips));
+            updateFinancePassengerSelect();
+        }
+
+        // --- Honduras WhatsApp & Phone Helper ---
+        function formatPhoneHonduras(phone) {
+            if (!phone) return '';
+            let clean = phone.replace(/\D/g, '');
+            if (clean.length === 8) {
+                return clean.slice(0, 4) + '-' + clean.slice(4);
+            }
+            return phone;
+        }
+
+        function getWhatsAppLink(phone, message) {
+            if (!phone) return '#';
+            let clean = phone.replace(/\D/g, '');
+            if (clean.length === 8) {
+                clean = '504' + clean;
+            } else if (clean.startsWith('504') && clean.length === 11) {
+                // already 504 + 8 digits
+            } else if (!clean.startsWith('504') && clean.length > 0) {
+                clean = '504' + clean;
+            }
+            return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
         }
 
         function generateSampleTrips() {
@@ -441,11 +487,15 @@
             const year = now.getFullYear();
             const month = now.getMonth();
             
-            // Add a few trips in current month
-            const sampleDates = [3, 5, 8, 10, 12, 15, 18, 20];
+            const sampleDates = [2, 4, 7, 10, 12, 16, 18, 21];
             sampleDates.forEach((day, index) => {
                 const passenger = state.passengers[index % state.passengers.length];
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                let status = 'Pendiente';
+                if (day < now.getDate() - 3) status = 'Cobrado';
+                else if (day < now.getDate()) status = 'Completado';
+
                 state.trips.push({
                     id: 'trip_' + Math.random().toString(36).substr(2, 9),
                     date: dateStr,
@@ -453,11 +503,11 @@
                     origin: passenger.origin,
                     destination: passenger.destination,
                     rate: passenger.rate,
-                    extraCharges: index % 3 === 0 ? 15.00 : 0.00,
-                    extraReason: index % 3 === 0 ? 'Parada extra en farmacia' : '',
+                    extraCharges: index % 3 === 0 ? 30.00 : 0.00,
+                    extraReason: index % 3 === 0 ? 'Espera de 15 min' : '',
                     shift: index % 2 === 0 ? 'Mañana' : 'Tarde',
                     notes: passenger.notes,
-                    status: day < now.getDate() ? 'Completado' : 'Pendiente'
+                    status: status
                 });
             });
             saveToStorage();
@@ -507,29 +557,25 @@
             const gridEl = document.getElementById('calendar-grid');
             gridEl.innerHTML = '';
 
-            // First day of month
             const firstDay = new Date(year, month, 1);
             let startingDay = firstDay.getDay() - 1; // Monday start
-            if (startingDay === -1) startingDay = 6; // Sunday
+            if (startingDay === -1) startingDay = 6;
 
             const totalDays = new Date(year, month + 1, 0).getDate();
             const prevMonthDays = new Date(year, month, 0).getDate();
 
-            // Padding from previous month
             for (let i = startingDay - 1; i >= 0; i--) {
                 const dayNum = prevMonthDays - i;
                 const cell = createDayCell(dayNum, true, null);
                 gridEl.appendChild(cell);
             }
 
-            // Current month days
             for (let day = 1; day <= totalDays; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const cell = createDayCell(day, false, dateStr);
                 gridEl.appendChild(cell);
             }
 
-            // Padding for next month to complete grid rows
             const totalCells = gridEl.children.length;
             const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
             for (let i = 1; i <= remainingCells; i++) {
@@ -540,7 +586,7 @@
 
         function createDayCell(dayNum, isOtherMonth, dateStr) {
             const cell = document.createElement('div');
-            cell.className = `bg-white min-h-[120px] p-2 flex flex-col justify-between transition ${isOtherMonth ? 'bg-gray-50/60 text-gray-400' : 'text-gray-800 hover:bg-gray-50/50'}`;
+            cell.className = `bg-white min-h-[130px] p-2 flex flex-col justify-between transition ${isOtherMonth ? 'bg-gray-50/60 text-gray-400' : 'text-gray-800 hover:bg-gray-50/50'}`;
 
             const headerDiv = document.createElement('div');
             headerDiv.className = "flex items-center justify-between mb-1";
@@ -559,9 +605,8 @@
             }
             cell.appendChild(headerDiv);
 
-            // Trips container for this day
             const tripsList = document.createElement('div');
-            tripsList.className = "space-y-1.5 overflow-y-auto max-h-[100px] text-xs";
+            tripsList.className = "space-y-1.5 overflow-y-auto max-h-[110px] text-xs";
 
             if (!isOtherMonth && dateStr) {
                 const dayTrips = state.trips.filter(t => t.date === dateStr);
@@ -570,7 +615,8 @@
                     const tripCard = document.createElement('div');
                     
                     let statusBg = 'bg-amber-50 border-amber-200 text-amber-800';
-                    if (trip.status === 'Completado') statusBg = 'bg-brand-50 border-brand-200 text-brand-800';
+                    if (trip.status === 'Completado') statusBg = 'bg-blue-50 border-blue-200 text-blue-800';
+                    if (trip.status === 'Cobrado') statusBg = 'bg-emerald-50 border-emerald-200 text-emerald-800';
                     if (trip.status === 'Cancelado') statusBg = 'bg-red-50 border-red-200 text-red-800 line-through';
 
                     tripCard.className = `p-1.5 rounded-lg border ${statusBg} shadow-xs flex flex-col space-y-1 group relative`;
@@ -580,14 +626,14 @@
                     tripCard.innerHTML = `
                         <div class="flex items-center justify-between font-semibold">
                             <span class="truncate pr-1">${passenger.name.split(' ')[0]}</span>
-                            <span class="text-[10px] font-bold">$${totalAmount.toFixed(2)}</span>
+                            <span class="text-[10px] font-bold">L ${totalAmount.toFixed(2)}</span>
                         </div>
                         <div class="text-[10px] text-gray-500 truncate">${trip.origin} ➔ ${trip.destination}</div>
                         <div class="flex items-center justify-between pt-1 border-t border-gray-200/40 text-[10px]">
                             <span class="font-medium">${trip.shift}</span>
                             <div class="flex items-center space-x-1.5">
                                 <button onclick="openAdjustmentModal('${trip.id}')" title="Ajuste / Extra" class="text-amber-600 hover:text-amber-800"><i class="fa-solid fa-coins"></i></button>
-                                <button onclick="toggleTripStatus('${trip.id}')" title="Cambiar Estado" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-check"></i></button>
+                                <button onclick="cycleTripStatus('${trip.id}')" title="Estado: ${trip.status}" class="text-brand-600 hover:text-brand-800 font-bold px-1 rounded bg-white/60">${trip.status[0]}</button>
                                 <button onclick="editTrip('${trip.id}')" title="Editar" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
                                 <button onclick="deleteTrip('${trip.id}')" title="Eliminar" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
                             </div>
@@ -607,7 +653,6 @@
             document.getElementById('trip-id').value = '';
             document.getElementById('trip-modal-title').innerText = 'Programar Nuevo Viaje';
 
-            // Populate passenger dropdown
             const select = document.getElementById('trip-passenger');
             select.innerHTML = '<option value="">Seleccione un pasajero...</option>';
             state.passengers.forEach(p => {
@@ -651,7 +696,6 @@
             const notes = document.getElementById('trip-notes').value;
 
             if (id) {
-                // Edit
                 const trip = state.trips.find(t => t.id === id);
                 if (trip) {
                     trip.date = date;
@@ -664,7 +708,6 @@
                 }
                 showToast('Viaje actualizado correctamente');
             } else {
-                // Create
                 const newTrip = {
                     id: 'trip_' + Math.random().toString(36).substr(2, 9),
                     date,
@@ -715,16 +758,28 @@
             }
         }
 
-        function toggleTripStatus(id) {
+        function cycleTripStatus(id) {
             const trip = state.trips.find(t => t.id === id);
             if (trip) {
+                // Cycle: Pendiente -> Completado -> Cobrado -> Cancelado -> Pendiente
                 if (trip.status === 'Pendiente') trip.status = 'Completado';
-                else if (trip.status === 'Completado') trip.status = 'Cancelado';
+                else if (trip.status === 'Completado') trip.status = 'Cobrado';
+                else if (trip.status === 'Cobrado') trip.status = 'Cancelado';
                 else trip.status = 'Pendiente';
 
                 saveToStorage();
                 renderCurrentTab();
                 showToast(`Estado cambiado a: ${trip.status}`);
+            }
+        }
+
+        function setTripStatus(id, newStatus) {
+            const trip = state.trips.find(t => t.id === id);
+            if (trip) {
+                trip.status = newStatus;
+                saveToStorage();
+                renderCurrentTab();
+                showToast(`Estado actualizado a: ${newStatus}`);
             }
         }
 
@@ -736,7 +791,7 @@
             const passenger = state.passengers.find(p => p.id === trip.passengerId) || { name: 'Pasajero' };
 
             document.getElementById('adj-trip-id').value = trip.id;
-            document.getElementById('adj-trip-info').innerText = `Pasajero: ${passenger.name}\nFecha: ${trip.date} (${trip.shift})\nRuta: ${trip.origin} ➔ ${trip.destination}\nTarifa Base: $${trip.rate}`;
+            document.getElementById('adj-trip-info').innerText = `Pasajero: ${passenger.name}\nFecha: ${trip.date} (${trip.shift})\nRuta: ${trip.origin} ➔ ${trip.destination}\nTarifa Base: L ${trip.rate}`;
             document.getElementById('adj-amount').value = trip.extraCharges || '';
             document.getElementById('adj-reason').value = trip.extraReason || '';
 
@@ -783,6 +838,9 @@
             }
 
             filtered.forEach(passenger => {
+                const formattedPhone = formatPhoneHonduras(passenger.phone);
+                const waLink = getWhatsAppLink(passenger.phone, `Hola ${passenger.name}, le escribo de MotoTaxi Pro para coordinar sus viajes.`);
+                
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between space-y-4 hover:shadow-md transition";
                 card.innerHTML = `
@@ -790,24 +848,33 @@
                         <div class="flex items-start justify-between">
                             <div>
                                 <h3 class="font-bold text-gray-900 text-base">${passenger.name}</h3>
-                                <p class="text-xs text-gray-500"><i class="fa-solid fa-phone mr-1"></i> ${passenger.phone || 'Sin teléfono'}</p>
+                                <p class="text-xs text-gray-500 flex items-center space-x-1 mt-0.5">
+                                    <i class="fa-solid fa-phone text-gray-400"></i>
+                                    <span>+504 ${formattedPhone}</span>
+                                </p>
                             </div>
-                            <span class="bg-brand-50 text-brand-700 font-bold px-2.5 py-1 rounded-xl text-sm border border-brand-100">$${Number(passenger.rate).toFixed(2)}</span>
+                            <span class="bg-brand-50 text-brand-700 font-bold px-2.5 py-1 rounded-xl text-sm border border-brand-100">L ${Number(passenger.rate).toFixed(2)}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs space-y-1">
                             <p class="text-gray-600"><span class="font-semibold">Ruta:</span> ${passenger.origin || 'N/A'} ➔ ${passenger.destination || 'N/A'}</p>
                             ${passenger.notes ? `<p class="text-gray-500 italic"><span class="font-semibold">Notas:</span> ${passenger.notes}</p>` : ''}
                         </div>
                     </div>
-                    <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
-                        <button onclick="editPassenger('${passenger.id}')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
-                            <i class="fa-solid fa-pen"></i>
-                            <span>Editar</span>
-                        </button>
-                        <button onclick="deletePassenger('${passenger.id}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
-                            <i class="fa-solid fa-trash"></i>
-                            <span>Eliminar</span>
-                        </button>
+                    <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <a href="${waLink}" target="_blank" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 border border-emerald-200">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>WhatsApp</span>
+                        </a>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="editPassenger('${passenger.id}')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                                <i class="fa-solid fa-pen"></i>
+                                <span>Editar</span>
+                            </button>
+                            <button onclick="deletePassenger('${passenger.id}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Eliminar</span>
+                            </button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -835,11 +902,21 @@
             const rate = parseFloat(document.getElementById('pass-rate').value);
             const notes = document.getElementById('pass-notes').value;
 
+            // Basic validation for 8 digits Honduras phone
+            let cleanPhone = phone.replace(/\D/g, '');
+            if (cleanPhone.startsWith('504')) {
+                cleanPhone = cleanPhone.slice(3);
+            }
+            if (cleanPhone.length !== 8) {
+                alert('Por favor ingrese un número de teléfono válido de Honduras de 8 dígitos (ej. 98765432).');
+                return;
+            }
+
             if (id) {
                 const p = state.passengers.find(item => item.id === id);
                 if (p) {
                     p.name = name;
-                    p.phone = phone;
+                    p.phone = cleanPhone;
                     p.origin = origin;
                     p.destination = destination;
                     p.rate = rate;
@@ -850,7 +927,7 @@
                 const newPassenger = {
                     id: 'pass_' + Math.random().toString(36).substr(2, 9),
                     name,
-                    phone,
+                    phone: cleanPhone,
                     origin,
                     destination,
                     rate,
@@ -905,39 +982,75 @@
             }
         }
 
-        function renderFinances() {
-            const monthVal = document.getElementById('finance-month').value; // YYYY-MM
-            const fortnight = parseInt(document.getElementById('finance-fortnight').value); // 1 or 2
+        function updateFinancePassengerSelect() {
+            const select = document.getElementById('finance-passenger-filter');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="all">-- Todos los Pasajeros --</option>';
+            state.passengers.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+            select.value = currentVal;
+        }
 
-            if (!monthVal) return;
+        function getFilteredFortnightTrips() {
+            const monthVal = document.getElementById('finance-month').value;
+            const fortnight = parseInt(document.getElementById('finance-fortnight').value);
+            const passengerFilter = document.getElementById('finance-passenger-filter').value;
+
+            if (!monthVal) return [];
 
             const [yearStr, monthStr] = monthVal.split('-');
             const year = parseInt(yearStr);
             const month = parseInt(monthStr) - 1;
 
-            // Filter trips for this month and fortnight
-            const fortnightTrips = state.trips.filter(t => {
+            return state.trips.filter(t => {
                 if (!t.date || t.status === 'Cancelado') return false;
                 const [tYear, tMonth, tDay] = t.date.split('-').map(Number);
                 if (tYear !== year || (tMonth - 1) !== month) return false;
 
                 if (fortnight === 1) {
-                    return tDay >= 1 && tDay <= 15;
+                    if (!(tDay >= 1 && tDay <= 15)) return false;
                 } else {
-                    return tDay >= 16;
+                    if (!(tDay >= 16)) return false;
                 }
-            });
 
-            let totalIncome = 0;
-            let baseIncome = 0;
-            let extraIncome = 0;
+                if (passengerFilter !== 'all' && t.passengerId !== passengerFilter) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        function renderFinances() {
+            const fortnightTrips = getFilteredFortnightTrips();
+            const passengerFilter = document.getElementById('finance-passenger-filter').value;
+
+            // Show or hide WhatsApp / Copy buttons based on whether an individual passenger is selected
+            const btnWa = document.getElementById('btn-whatsapp-account');
+            const btnCopy = document.getElementById('btn-copy-account');
+            if (passengerFilter !== 'all') {
+                btnWa.classList.remove('hidden');
+                btnCopy.classList.remove('hidden');
+            } else {
+                btnWa.classList.add('hidden');
+                btnCopy.classList.add('hidden');
+            }
+
+            let totalAccount = 0; // Accumulated total (Pendientes + Completados + Cobrados)
+            let completedIncome = 0;
             let completedCount = 0;
+            let collectedIncome = 0;
+            let collectedCount = 0;
+            let pendingIncome = 0;
+            let pendingCount = 0;
+            let extraIncome = 0;
 
             const tbody = document.getElementById('finance-table-body');
             tbody.innerHTML = '';
 
             if (fortnightTrips.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No hay registros de viajes para esta quincena.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">No hay registros de viajes para esta selección.</td></tr>`;
             } else {
                 fortnightTrips.sort((a, b) => a.date.localeCompare(b.date));
                 fortnightTrips.forEach(trip => {
@@ -946,12 +1059,25 @@
                     const extra = Number(trip.extraCharges || 0);
                     const total = base + extra;
 
+                    extraIncome += extra;
+
                     if (trip.status === 'Completado') {
-                        totalIncome += total;
-                        baseIncome += base;
-                        extraIncome += extra;
+                        completedIncome += total;
                         completedCount++;
+                        totalAccount += total;
+                    } else if (trip.status === 'Cobrado') {
+                        collectedIncome += total;
+                        collectedCount++;
+                        totalAccount += total;
+                    } else if (trip.status === 'Pendiente') {
+                        pendingIncome += total;
+                        pendingCount++;
+                        totalAccount += total; // Without hiding pending trips in the total accumulated account
                     }
+
+                    let badgeClass = 'bg-amber-50 text-amber-700 border border-amber-200';
+                    if (trip.status === 'Completado') badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                    if (trip.status === 'Cobrado') badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
 
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition";
@@ -959,11 +1085,19 @@
                         <td class="p-3 font-medium text-gray-900">${trip.date}</td>
                         <td class="p-3 font-medium text-gray-900">${passenger.name}</td>
                         <td class="p-3 text-gray-600">${trip.origin} ➔ ${trip.destination}</td>
-                        <td class="p-3 text-right text-gray-700">$${base.toFixed(2)}</td>
-                        <td class="p-3 text-right text-amber-600 font-medium">$${extra.toFixed(2)} ${trip.extraReason ? `<i class="fa-solid fa-circle-info text-xs" title="${trip.extraReason}"></i>` : ''}</td>
-                        <td class="p-3 text-right font-bold text-gray-900">$${total.toFixed(2)}</td>
+                        <td class="p-3 text-right text-gray-700">L ${base.toFixed(2)}</td>
+                        <td class="p-3 text-right text-purple-600 font-medium">L ${extra.toFixed(2)} ${trip.extraReason ? `<i class="fa-solid fa-circle-info text-xs" title="${trip.extraReason}"></i>` : ''}</td>
+                        <td class="p-3 text-right font-bold text-gray-900">L ${total.toFixed(2)}</td>
                         <td class="p-3 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${trip.status === 'Completado' ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">${trip.status}</span>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">${trip.status}</span>
+                        </td>
+                        <td class="p-3 text-center">
+                            <select onchange="setTripStatus('${trip.id}', this.value)" class="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-medium focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                <option value="Pendiente" ${trip.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="Completado" ${trip.status === 'Completado' ? 'selected' : ''}>Completado</option>
+                                <option value="Cobrado" ${trip.status === 'Cobrado' ? 'selected' : ''}>Cobrado</option>
+                                <option value="Cancelado" ${trip.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                            </select>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -971,13 +1105,91 @@
             }
 
             // Update KPI cards
-            document.getElementById('kpi-total-income').innerText = `$${totalIncome.toFixed(2)}`;
-            document.getElementById('kpi-completed-trips').innerText = completedCount;
-            document.getElementById('kpi-base-income').innerText = `$${baseIncome.toFixed(2)}`;
-            document.getElementById('kpi-extra-income').innerText = `$${extraIncome.toFixed(2)}`;
-            
-            const avg = completedCount > 0 ? totalIncome / completedCount : 0;
-            document.getElementById('kpi-avg-income').innerText = `$${avg.toFixed(2)}`;
+            document.getElementById('kpi-total-account').innerText = `L ${totalAccount.toFixed(2)}`;
+            document.getElementById('kpi-completed-income').innerText = `L ${completedIncome.toFixed(2)}`;
+            document.getElementById('kpi-completed-count').innerText = completedCount;
+            document.getElementById('kpi-collected-income').innerText = `L ${collectedIncome.toFixed(2)}`;
+            document.getElementById('kpi-collected-count').innerText = collectedCount;
+            document.getElementById('kpi-pending-income').innerText = `L ${pendingIncome.toFixed(2)}`;
+            document.getElementById('kpi-pending-count').innerText = pendingCount;
+            document.getElementById('kpi-extra-income').innerText = `L ${extraIncome.toFixed(2)}`;
+        }
+
+        // --- Account Statement WhatsApp & Clipboard Generation ---
+        function generateAccountStatementText() {
+            const passengerId = document.getElementById('finance-passenger-filter').value;
+            if (passengerId === 'all') return '';
+
+            const passenger = state.passengers.find(p => p.id === passengerId);
+            if (!passenger) return '';
+
+            const monthVal = document.getElementById('finance-month').value;
+            const fortnight = document.getElementById('finance-fortnight').value;
+            const [yearStr, monthStr] = monthVal.split('-');
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            const monthName = monthNames[parseInt(monthStr) - 1];
+
+            const trips = getFilteredFortnightTrips();
+
+            let text = `*ESTADO DE CUENTA - MOTOTAXI PRO*\n`;
+            text += `Pasajero: *${passenger.name}*\n`;
+            text += `Período: *${fortnight}ª Quincena de ${monthName} ${yearStr}*\n\n`;
+            text += `*Detalle de Viajes:*\n`;
+
+            let totalAcc = 0;
+            let compSum = 0;
+            let collSum = 0;
+            let pendSum = 0;
+
+            trips.forEach(t => {
+                const base = Number(t.rate || 0);
+                const extra = Number(t.extraCharges || 0);
+                const tot = base + extra;
+                totalAcc += tot;
+
+                if (t.status === 'Completado') compSum += tot;
+                else if (t.status === 'Cobrado') collSum += tot;
+                else if (t.status === 'Pendiente') pendSum += tot;
+
+                text += `• ${t.date} | ${t.origin} ➔ ${t.destination} (${t.shift})\n`;
+                text += `  Base: L ${base.toFixed(2)}`;
+                if (extra > 0) {
+                    text += ` + Extra: L ${extra.toFixed(2)} (${t.extraReason || 'Adicional'})`;
+                }
+                text += `\n  Total: *L ${tot.toFixed(2)}* [${t.status}]\n`;
+            });
+
+            text += `\n*Resumen de Estado:*\n`;
+            text += `• Completados: L ${compSum.toFixed(2)}\n`;
+            text += `• Cobrados: L ${collSum.toFixed(2)}\n`;
+            text += `• Pendientes: L ${pendSum.toFixed(2)}\n`;
+            text += `*TOTAL ACUMULADO A PAGAR: L ${totalAcc.toFixed(2)}*\n\n`;
+            text += `¡Gracias por su preferencia en MotoTaxi Pro! 🛵🇭🇳`;
+
+            return { passenger, text };
+        }
+
+        function sendAccountWhatsApp() {
+            const data = generateAccountStatementText();
+            if (!data || !data.passenger) {
+                alert('Por favor seleccione un pasajero específico para enviar su estado de cuenta.');
+                return;
+            }
+            const waUrl = getWhatsAppLink(data.passenger.phone, data.text);
+            window.open(waUrl, '_blank');
+        }
+
+        function copyAccountText() {
+            const data = generateAccountStatementText();
+            if (!data || !data.text) {
+                alert('Por favor seleccione un pasajero específico para copiar su cuenta.');
+                return;
+            }
+            navigator.clipboard.writeText(data.text).then(() => {
+                showToast('Estado de cuenta copiado al portapapeles');
+            }).catch(err => {
+                alert('Error al copiar al portapapeles');
+            });
         }
 
         function printReport() {
@@ -1002,7 +1214,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `mototaxi_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.setAttribute("download", `mototaxi_honduras_backup_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -1035,7 +1247,7 @@
         }
 
         function resetDemoData() {
-            if (confirm('¿Restaurar datos de ejemplo? Se sobrescribirán los datos actuales.')) {
+            if (confirm('¿Restaurar datos de ejemplo de Honduras? Se sobrescribirán los datos actuales.')) {
                 state.passengers = seedData.passengers;
                 state.trips = [];
                 generateSampleTrips();
