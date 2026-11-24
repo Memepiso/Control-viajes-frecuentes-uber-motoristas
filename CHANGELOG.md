@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.0] - 2026-11-24
+### Added
+- **Estado Inicial "Pendiente"**: Al programar un nuevo viaje, el estado por defecto ahora es *Pendiente* (en vez de *Agendado*), facilitando el registro rápido de viajes diarios.
+- **Resaltado Visual de "Hoy" en Calendario**: Al pulsar el botón "Hoy", se navega al mes actual y la celda del día actual se resalta con un borde destacado y etiqueta distintiva "HOY".
+- **Mensaje de WhatsApp Estilo Recibo/Factura**: Formato de estado de cuenta exportado optimizado y limpio, con viñetas numeradas, desglose claro de base, extras, totales en L y resumen financiero sin símbolos corruptos.
+
+### Changed
+- **Optimización de Interfaz (Sin Repeticiones de "Honduras")**: Eliminación de la palabra "Honduras" de subtítulos y etiquetas repetitivas, manteniendo formato de 8 dígitos y prefijo automático +504.
+- **Optimización Visual Mobile**: Ajuste de espaciados, tablas y formularios para una experiencia cómoda y fluida en teléfonos móviles.
+- **Documentación Completa**: Registro actualizado de versiones v0.1.0 a v0.5.0 en el encabezado de `index.html` y en `CHANGELOG.md`.
+
 ## [v0.4.0] - 2026-11-23
 ### Added
 - **Columna dedicada "DÍA"**: Añadida una columna específica para la inicial del día de la semana (L, M, Mi, J, V, S, D) junto a la fecha en la tabla de reportes.
